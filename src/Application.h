@@ -14,9 +14,11 @@ public:
 
 private:
   void ProcessInput();
+  void RenderState();
 
 private:
   SDL_Window *m_Window;
+  SDL_GLContext m_GLContext;
 
   bool m_IsRunning;
 };
