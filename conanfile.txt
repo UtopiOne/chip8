@@ -1,0 +1,8 @@
+[requires]
+sdl/3.2.14
+fmt/11.2.0
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
