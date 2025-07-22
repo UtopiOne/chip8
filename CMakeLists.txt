@@ -18,7 +18,14 @@ target_include_directories(glad PUBLIC vendor/glad/include)
 
 add_executable(chip
 	src/Main.cpp
-	src/Application.h
+
 	src/Application.cpp
+	src/Application.h
+
+	src/Display.cpp
+	src/Display.h
+
+	src/Interpreter.cpp
+	src/Interpreter.h
 )
 target_link_libraries(chip sdl::sdl fmt::fmt glad)

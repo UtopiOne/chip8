@@ -11,11 +11,10 @@ int main(int argc, char *argv[]) {
   }
 
   auto rom_location = argv[1];
-  fmt::println("ROM location: {}", rom_location);
 
   Chip8::Application application;
 
-  if (application.Initialize()) {
+  if (application.Initialize(rom_location)) {
     application.Run();
   }
 

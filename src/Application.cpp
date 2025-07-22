@@ -6,14 +6,12 @@
 #include <glad/glad.h>
 
 #include <cstdint>
-
-constexpr uint16_t WINDOW_WIDTH = 1920;
-constexpr uint16_t WINDOW_HEIGHT = 1080;
+#include <memory>
 
 void MessageCallback(GLenum source, GLenum, GLuint, GLenum severity,
                      GLsizei length, const GLchar *message,
                      const void *userParam) {
-  fmt::println(stderr, "OpenGL Error: {}", message);
+  fmt::println(stderr, "OpenGL: {}", message);
 }
 
 namespace Chip8 {
@@ -22,13 +20,23 @@ Application::Application() : m_Window(nullptr), m_IsRunning(true) {}
 
 Application::~Application() {}
 
-bool Application::Initialize() {
+bool Application::Initialize(const char *rom_location) {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
     fmt::println(stderr, "Failed to initialize SDL: {}", SDL_GetError());
 
     return false;
   }
   fmt::println("SDL initialized successfully.");
+
+  const auto window_flags = SDL_WINDOW_OPENGL;
+  m_Window =
+      SDL_CreateWindow("CHIP8", WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
+  if (m_Window == nullptr) {
+    fmt::println(stderr, "SDL_CreateWindow Error: {}", SDL_GetError());
+
+    return false;
+  }
+  fmt::println("Window initialized successfully.");
 
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -41,16 +49,6 @@ bool Application::Initialize() {
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-
-  const auto window_flags = SDL_WINDOW_OPENGL;
-  m_Window =
-      SDL_CreateWindow("CHIP8", WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
-  if (m_Window == nullptr) {
-    fmt::println(stderr, "SDL_CreateWindow Error: {}", SDL_GetError());
-
-    return false;
-  }
-  fmt::println("Window initialized successfully.");
 
   m_GLContext = SDL_GL_CreateContext(m_Window);
   if (m_GLContext == nullptr) {
@@ -75,6 +73,9 @@ bool Application::Initialize() {
 
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   glDebugMessageCallback(MessageCallback, nullptr);
+
+  m_Interpreter = std::make_unique<Interpreter>(rom_location);
+  m_Display = std::make_unique<Display>();
 
   return true;
 }
@@ -107,8 +108,10 @@ void Application::ProcessInput() {
 }
 
 void Application::RenderState() {
-  glClearColor(0.2, 0.2, 0.2, 1.0);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
+
+  m_Display->RenderDisplay();
 
   SDL_GL_SwapWindow(m_Window);
 }

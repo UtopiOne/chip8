@@ -1,17 +1,35 @@
 #pragma once
 
 #include <cstdint>
+#include <stack>
+
+using MemoryAddress = uint16_t;
+using Byte = uint8_t;
+
+constexpr unsigned int MEMORY_SIZE = 4096;
+constexpr unsigned int REGISTER_SIZE = 16;
+
 namespace Chip8 {
 
 class Interpreter {
 public:
-  Interpreter();
-  ~Interpreter();
+  Interpreter(const char *rom_location);
+
+  void Run();
 
 private:
-  uint8_t m_Memory[4096];
+  void LoadROM(const char *rom_location);
 
-  uint16_t m_ProgramCounter, m_IndexRegister;
+  void FetchInstruction();
+  void Decode();
+  void Execite();
+
+private:
+  Byte m_Memory[MEMORY_SIZE];
+  Byte m_Registers[REGISTER_SIZE];
+
+  MemoryAddress m_ProgramCounter, m_IndexRegister;
+  std::stack<MemoryAddress> m_CallStack;
 };
 
 } // namespace Chip8
