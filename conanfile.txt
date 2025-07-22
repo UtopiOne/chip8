@@ -1,6 +1,7 @@
 [requires]
 sdl/3.2.14
 fmt/11.2.0
+glm/1.0.1
 
 [generators]
 CMakeDeps

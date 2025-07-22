@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDART 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(SDL3 REQUIRED)
+find_package(glm REQUIRED)
 find_package(fmt REQUIRED)
 
 add_library(glad
@@ -28,4 +29,4 @@ add_executable(chip
 	src/Interpreter.cpp
 	src/Interpreter.h
 )
-target_link_libraries(chip sdl::sdl fmt::fmt glad)
+target_link_libraries(chip sdl::sdl fmt::fmt glm::glm glad)

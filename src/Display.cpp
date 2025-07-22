@@ -1,7 +1,10 @@
 #include "Display.h"
 #include "Application.h"
 
+#include <cstdint>
 #include <glad/glad.h>
+
+#include <vector>
 
 namespace Chip8 {
 
@@ -9,6 +12,18 @@ Display::Display() {
   constexpr auto pixel_width = 2.0 / WINDOW_WIDTH * DISPLAY_WIDTH;
   constexpr auto pixel_height = 2.0 / WINDOW_HEIGHT * DISPLAY_HEIGHT;
 
+  // std::vector<float> positions;
+  // std::vector<unsigned int> elements;
+  //
+  // uint16_t cnt = 0;
+  // for (int x = 0; x < DISPLAY_WIDTH; ++x) {
+  //   for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
+  //     if (GetPixelState(x, y)) {
+  //       positions.push_back(-1.0);
+  //     }
+  //   }
+  // }
+  //
   float positions[] = {
       -1.0, // 0
       1.0,

@@ -1,11 +1,9 @@
 #include "Application.h"
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_video.h>
 #include <fmt/base.h>
 #include <glad/glad.h>
 
-#include <cstdint>
 #include <memory>
 
 void MessageCallback(GLenum source, GLenum, GLuint, GLenum severity,
@@ -77,13 +75,15 @@ bool Application::Initialize(const char *rom_location) {
   m_Interpreter = std::make_unique<Interpreter>(rom_location);
   m_Display = std::make_unique<Display>();
 
+  m_Interpreter->DumpMemory();
+
   return true;
 }
 
 void Application::Run() {
   while (m_IsRunning) {
-    ProcessInput();
-    RenderState();
+    this->ProcessInput();
+    this->RenderState();
   }
 }
 
