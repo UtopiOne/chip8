@@ -5,6 +5,7 @@
 #include <stack>
 
 using MemoryAddress = uint16_t;
+using Opcode = uint16_t;
 using Byte = uint8_t;
 
 constexpr unsigned int MEMORY_SIZE = 4096;
@@ -40,7 +41,7 @@ class Interpreter {
 public:
   Interpreter(const char *rom_location);
 
-  void Run();
+  void Run(float delta_time);
 
   void DumpMemory();
 
@@ -49,15 +50,19 @@ private:
   void LoadFont();
 
   void FetchInstruction();
-  void Decode();
-  void Execute();
+  void DecodeInstruction();
+  void ExecuteInstruction();
 
 private:
   std::array<Byte, MEMORY_SIZE> m_Memory;
   std::array<Byte, REGISTER_SIZE> m_Registers;
 
+  Byte m_DelayTimer, m_SoundTimer;
+
   MemoryAddress m_ProgramCounter, m_IndexRegister;
   std::stack<MemoryAddress> m_CallStack;
+
+  Opcode m_CurrentOpcode;
 };
 
 } // namespace Chip8

@@ -10,7 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(SDL3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(fmt REQUIRED)
+find_package(spdlog REQUIRED)
 
 add_library(glad
 	vendor/glad/src/glad.c
@@ -28,5 +28,8 @@ add_executable(chip
 
 	src/Interpreter.cpp
 	src/Interpreter.h
+
+	src/Logging.cpp
+	src/Logging.h
 )
-target_link_libraries(chip sdl::sdl fmt::fmt glm::glm glad)
+target_link_libraries(chip sdl::sdl spdlog::spdlog glm::glm glad)

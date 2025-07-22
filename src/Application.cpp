@@ -1,7 +1,9 @@
 #include "Application.h"
 
+#include "Logging.h"
+
 #include <SDL3/SDL.h>
-#include <fmt/base.h>
+#include <SDL3/SDL_timer.h>
 #include <glad/glad.h>
 
 #include <memory>
@@ -9,7 +11,25 @@
 void MessageCallback(GLenum source, GLenum, GLuint, GLenum severity,
                      GLsizei length, const GLchar *message,
                      const void *userParam) {
-  fmt::println(stderr, "OpenGL: {}", message);
+  switch (severity) {
+  case GL_DEBUG_SEVERITY_HIGH: {
+    LOG_ERROR("{}", message);
+    break;
+  }
+  case GL_DEBUG_SEVERITY_MEDIUM: {
+    LOG_WARN("{}", message);
+    break;
+  }
+  case GL_DEBUG_SEVERITY_LOW: {
+    LOG_WARN("{}", message);
+  }
+  case GL_DEBUG_SEVERITY_NOTIFICATION: {
+    LOG_TRACE("{}", message);
+  }
+  default: {
+    LOG_INFO("{}", message);
+  }
+  }
 }
 
 namespace Chip8 {
@@ -20,21 +40,21 @@ Application::~Application() {}
 
 bool Application::Initialize(const char *rom_location) {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-    fmt::println(stderr, "Failed to initialize SDL: {}", SDL_GetError());
+    LOG_ERROR("Failed to initialize SDL: {}", SDL_GetError());
 
     return false;
   }
-  fmt::println("SDL initialized successfully.");
+  LOG_INFO("SDL Initialized successfully.");
 
   const auto window_flags = SDL_WINDOW_OPENGL;
   m_Window =
       SDL_CreateWindow("CHIP8", WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
   if (m_Window == nullptr) {
-    fmt::println(stderr, "SDL_CreateWindow Error: {}", SDL_GetError());
+    LOG_ERROR("SDL_CreateWindow Error: {}", SDL_GetError());
 
     return false;
   }
-  fmt::println("Window initialized successfully.");
+  LOG_INFO("Window initialized successfully.");
 
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -50,24 +70,24 @@ bool Application::Initialize(const char *rom_location) {
 
   m_GLContext = SDL_GL_CreateContext(m_Window);
   if (m_GLContext == nullptr) {
-    fmt::println(stderr, "SDL_GL_CreateContext error: {}", SDL_GetError());
+    LOG_ERROR("SDL_GL_CreateContext error: {}", SDL_GetError());
 
     return false;
   }
-  fmt::println("OpenGL context initialized successfully.");
+  LOG_INFO("OpenGL context initialized successfully.");
 
   SDL_GL_MakeCurrent(m_Window, m_GLContext);
 
   if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-    fmt::println(stderr, "Failed to initialize GLAD.");
+    LOG_ERROR("Failed to initialize GLAD.");
 
     return false;
   }
-  fmt::println("GLAD initialized successfully");
+  LOG_INFO("GLAD initialized successfully.");
 
-  fmt::println("GL_VERSION: {}", (char *)glGetString(GL_VERSION));
-  fmt::println("GL_VENDOR: {}", (char *)glGetString(GL_VENDOR));
-  fmt::println("GL_RENDERER: {}", (char *)glGetString(GL_RENDERER));
+  LOG_TRACE("GL_VERSION: {}", (char *)glGetString(GL_VERSION));
+  LOG_TRACE("GL_VENDOR: {}", (char *)glGetString(GL_VENDOR));
+  LOG_TRACE("GL_RENDERER: {}", (char *)glGetString(GL_RENDERER));
 
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   glDebugMessageCallback(MessageCallback, nullptr);
@@ -83,6 +103,7 @@ bool Application::Initialize(const char *rom_location) {
 void Application::Run() {
   while (m_IsRunning) {
     this->ProcessInput();
+    this->UpdateState();
     this->RenderState();
   }
 }
@@ -105,6 +126,17 @@ void Application::ProcessInput() {
     }
     }
   }
+}
+
+void Application::UpdateState() {
+  float delta_time = (SDL_GetTicks() - m_TicksCount) / 1000.0f;
+  m_TicksCount = SDL_GetTicks();
+
+  if (delta_time >= 0.05f) {
+    delta_time = 0.05f;
+  }
+
+  m_Interpreter->Run(delta_time);
 }
 
 void Application::RenderState() {

@@ -23,6 +23,7 @@ public:
 
 private:
   void ProcessInput();
+  void UpdateState();
   void RenderState();
 
 private:
@@ -33,5 +34,6 @@ private:
   std::unique_ptr<Display> m_Display;
 
   bool m_IsRunning;
+  unsigned int m_TicksCount;
 };
 } // namespace Chip8

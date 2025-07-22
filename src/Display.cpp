@@ -1,10 +1,8 @@
 #include "Display.h"
+
 #include "Application.h"
 
-#include <cstdint>
 #include <glad/glad.h>
-
-#include <vector>
 
 namespace Chip8 {
 

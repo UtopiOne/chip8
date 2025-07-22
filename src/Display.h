@@ -16,8 +16,10 @@ public:
 
   void RenderDisplay();
 
-  PixelState GetPixelState(int x, int y) { return m_PixelData[x][y]; }
-  void SetPixelState(PixelState state, int x, int y) {
+  inline const PixelState GetPixelState(const int x, const int y) const {
+    return m_PixelData[x][y];
+  }
+  void SetPixelState(const PixelState state, const int x, const int y) {
     m_PixelData[x][y] = state;
   }
 
