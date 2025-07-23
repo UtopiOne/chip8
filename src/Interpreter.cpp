@@ -10,7 +10,8 @@
 
 namespace Chip8 {
 
-Interpreter::Interpreter(const char *rom_location) : m_IndexRegister(0), m_ProgramCounter(ROM_START) {
+Interpreter::Interpreter(const char *rom_location)
+    : m_IndexRegister(0), m_ProgramCounter(ROM_START) {
   for (int i = 0; i < MEMORY_SIZE; ++i) {
     m_Memory[i] = 0;
   }

@@ -54,7 +54,9 @@ public:
 
   void Run(float delta_time);
 
-  void SetDisplayPointer(std::shared_ptr<Display> &display_pointer) { m_DisplayPointer = display_pointer; }
+  void SetDisplayPointer(std::shared_ptr<Display> &display_pointer) {
+    m_DisplayPointer = display_pointer;
+  }
 
   void DumpMemory();
 
