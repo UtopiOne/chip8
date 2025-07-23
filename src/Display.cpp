@@ -1,15 +1,15 @@
 #include "Display.h"
 
-#include "Application.h"
-
 #include <glad/glad.h>
+
+#include "Application.h"
 
 namespace Chip8 {
 
-Display::Display() {
-  constexpr auto pixel_width = 2.0 / WINDOW_WIDTH * DISPLAY_WIDTH;
-  constexpr auto pixel_height = 2.0 / WINDOW_HEIGHT * DISPLAY_HEIGHT;
+constexpr auto PIXEL_WIDTH = 2.0 / WINDOW_WIDTH * DISPLAY_WIDTH;
+constexpr auto PIXEL_HEIGHT = 2.0 / WINDOW_HEIGHT * DISPLAY_HEIGHT;
 
+Display::Display() {
   // std::vector<float> positions;
   // std::vector<unsigned int> elements;
   //
@@ -23,14 +23,14 @@ Display::Display() {
   // }
   //
   float positions[] = {
-      -1.0, // 0
+      -1.0,  // 0
       1.0,
-      -1.0, // 1
-      1.0f - pixel_height,
-      -1.0 + pixel_width, // 2
+      -1.0,  // 1
+      1.0f - PIXEL_HEIGHT,
+      -1.0 + PIXEL_WIDTH,  // 2
       1.0f,
-      -1.0 + pixel_width, // 3
-      1.0f - pixel_height,
+      -1.0 + PIXEL_WIDTH,  // 3
+      1.0f - PIXEL_HEIGHT,
   };
 
   unsigned int elements[] = {0, 1, 2, 3, 2, 1};
@@ -40,15 +40,13 @@ Display::Display() {
 
   glGenBuffers(1, &m_VBO);
   glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(positions), (void *)&positions,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(positions), (void*)&positions, GL_STATIC_DRAW);
 
   glGenBuffers(1, &m_EBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 }
 
@@ -56,4 +54,4 @@ void Display::RenderDisplay() {
   glBindVertexArray(m_VAO);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
-} // namespace Chip8
+}  // namespace Chip8

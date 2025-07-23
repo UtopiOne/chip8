@@ -1,17 +1,16 @@
 #include "Interpreter.h"
 
-#include "Logging.h"
-
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <ios>
 
+#include "Logging.h"
+
 namespace Chip8 {
 
-Interpreter::Interpreter(const char *rom_location)
-    : m_IndexRegister(0), m_ProgramCounter(ROM_START) {
+Interpreter::Interpreter(const char *rom_location) : m_IndexRegister(0), m_ProgramCounter(ROM_START) {
   for (int i = 0; i < MEMORY_SIZE; ++i) {
     m_Memory[i] = 0;
   }
@@ -21,9 +20,84 @@ Interpreter::Interpreter(const char *rom_location)
 }
 
 void Interpreter::Run(float delta_time) {
-  this->FetchInstruction();
-  this->DecodeInstruction();
-  this->ExecuteInstruction();
+  bool increment_program_counter = true;
+
+  m_CurrentOpcode = (m_Memory[m_ProgramCounter] << 8) | (m_Memory[m_ProgramCounter + 1]);
+
+  LOG_TRACE("Current Opcode: {:04X}", m_CurrentOpcode);
+
+  auto first_nibble = GET_FIRST_NIBBLE(m_CurrentOpcode);
+
+  switch (first_nibble) {
+    case 0x0: {
+      // 00E0: Clear Screen
+      if (m_CurrentOpcode == 0x00E0) {
+        LOG_TRACE("ClearScreen");
+        break;
+      }
+      break;
+    }
+
+    // 1NNN: Move (Jump) the program counter to memory address NNN
+    case 0x1: {
+      auto memory_address = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
+      m_ProgramCounter = memory_address;
+      increment_program_counter = false;
+
+      LOG_TRACE("Jump to: {:X}", memory_address);
+      break;
+    }
+
+    // 6XNN: Set the register VX to the value NN
+    case 0x6: {
+      auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto value = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
+
+      m_Registers[register_name] = value;
+
+      LOG_TRACE("Set register V{:X} to {:X}", register_name, value);
+      break;
+    }
+
+    // 7XNN: Add the value NN to VX
+    case 0x7: {
+      auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto value = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
+
+      m_Registers[register_name] += value;
+
+      LOG_TRACE("Add {:X} to register V{:X}", value, register_name);
+      break;
+    }
+
+    // ANNN: Set Index Register to the value NNN
+    case 0xA: {
+      auto value = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
+      m_IndexRegister = value;
+
+      LOG_TRACE("Set IndexRegister to {:X}", value);
+      break;
+    }
+
+    // DXYN: Display N-pixel tall sprite from the index register to the XY
+    // location from { VX, VY } registers
+    case 0xD: {
+      auto x = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto y = GET_THIRD_NIBBLE(m_CurrentOpcode);
+      auto n = GET_FOURTH_NIBBLE(m_CurrentOpcode);
+
+      LOG_TRACE("Draw sprite with height {:X} from V{:X}V{:X}", n, x, y);
+      break;
+    }
+    default: {
+      LOG_TRACE("Unimplemented or incorrect opcode");
+      break;
+    }
+  }
+
+  if (increment_program_counter) {
+    m_ProgramCounter += 2;
+  }
 }
 
 void Interpreter::DumpMemory() {
@@ -64,45 +138,4 @@ void Interpreter::LoadROM(const char *rom_location) {
   }
 }
 
-void Interpreter::FetchInstruction() {
-  m_CurrentOpcode =
-      (m_Memory[m_ProgramCounter] << 8) | (m_Memory[m_ProgramCounter + 1]);
-
-  LOG_TRACE("Current Opcode: {:04X}", m_CurrentOpcode);
-  m_ProgramCounter += 2;
-}
-
-void Interpreter::DecodeInstruction() {
-  auto first_nibble = m_CurrentOpcode >> 12;
-
-  switch (first_nibble) {
-  case 0x0: {
-    LOG_TRACE("ClearScreen");
-    break;
-  }
-  case 0x1: {
-    auto memory_address = m_CurrentOpcode >> 4;
-    LOG_TRACE("Jump to: {}", memory_address);
-    break;
-  }
-  case 0x6: {
-    auto register_name = (m_CurrentOpcode & 0x0F00) >> 8;
-    auto value = (m_CurrentOpcode & 0x00FF);
-    LOG_TRACE("Set register V{:X} to {:X}", register_name, value);
-    break;
-  }
-  case 0x7: {
-    auto register_name = (m_CurrentOpcode & 0x0F00) >> 8;
-    auto value = (m_CurrentOpcode & 0x00FF);
-    LOG_TRACE("Add {:X} to register V{:X}", value, register_name);
-  }
-  case 0xA: {
-    auto value = m_CurrentOpcode >> 4;
-    LOG_TRACE("Set IndexRegister to {:X}", value);
-  }
-  }
-}
-
-void Interpreter::ExecuteInstruction() {}
-
-} // namespace Chip8
+}  // namespace Chip8

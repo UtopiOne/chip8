@@ -9,19 +9,14 @@ using Buffer = unsigned int;
 
 constexpr unsigned int DISPLAY_WIDTH = 64;
 constexpr unsigned int DISPLAY_HEIGHT = 32;
-
 class Display {
 public:
   Display();
 
   void RenderDisplay();
 
-  inline const PixelState GetPixelState(const int x, const int y) const {
-    return m_PixelData[x][y];
-  }
-  void SetPixelState(const PixelState state, const int x, const int y) {
-    m_PixelData[x][y] = state;
-  }
+  inline const PixelState GetPixelState(const int x, const int y) const { return m_PixelData[x][y]; }
+  void SetPixelState(const PixelState state, const int x, const int y) { m_PixelData[x][y] = state; }
 
 private:
   std::array<std::array<PixelState, DISPLAY_HEIGHT>, DISPLAY_WIDTH> m_PixelData;
@@ -29,4 +24,4 @@ private:
   Buffer m_VBO, m_VAO, m_EBO;
 };
 
-} // namespace Chip8
+}  // namespace Chip8

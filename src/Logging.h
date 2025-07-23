@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include <spdlog/spdlog.h>
+
+#include <memory>
 
 namespace Chip8 {
 
@@ -10,9 +10,7 @@ class Logger {
 public:
   static void Init();
 
-  inline static std::shared_ptr<spdlog::logger> &GetLogger() {
-    return s_Logger;
-  }
+  inline static std::shared_ptr<spdlog::logger> &GetLogger() { return s_Logger; }
 
 private:
   static std::shared_ptr<spdlog::logger> s_Logger;
@@ -23,4 +21,4 @@ private:
 #define LOG_WARN(...) Chip8::Logger::GetLogger()->warn(__VA_ARGS__);
 #define LOG_ERROR(...) Chip8::Logger::GetLogger()->critical(__VA_ARGS__);
 
-} // namespace Chip8
+}  // namespace Chip8

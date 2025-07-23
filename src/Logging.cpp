@@ -18,4 +18,4 @@ void Logger::Init() {
   spdlog::flush_on(spdlog::level::trace);
 }
 
-} // namespace Chip8
+}  // namespace Chip8

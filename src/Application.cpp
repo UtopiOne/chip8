@@ -1,35 +1,36 @@
 #include "Application.h"
 
-#include "Logging.h"
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_timer.h>
-#include <filesystem>
 #include <glad/glad.h>
 
+#include <filesystem>
 #include <memory>
 
-void MessageCallback(GLenum source, GLenum, GLuint, GLenum severity,
-                     GLsizei length, const GLchar *message,
-                     const void *userParam) {
+#include "Logging.h"
+
+void MessageCallback(GLenum source, GLenum, GLuint, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
   switch (severity) {
-  case GL_DEBUG_SEVERITY_HIGH: {
-    LOG_ERROR("{}", message);
-    break;
-  }
-  case GL_DEBUG_SEVERITY_MEDIUM: {
-    LOG_WARN("{}", message);
-    break;
-  }
-  case GL_DEBUG_SEVERITY_LOW: {
-    LOG_WARN("{}", message);
-  }
-  case GL_DEBUG_SEVERITY_NOTIFICATION: {
-    LOG_TRACE("{}", message);
-  }
-  default: {
-    LOG_INFO("{}", message);
-  }
+    case GL_DEBUG_SEVERITY_HIGH: {
+      LOG_ERROR("[OPENGL] {}", message);
+      break;
+    }
+    case GL_DEBUG_SEVERITY_MEDIUM: {
+      LOG_WARN("[OPENGL] {}", message);
+      break;
+    }
+    case GL_DEBUG_SEVERITY_LOW: {
+      LOG_WARN("[OPENGL] {}", message);
+      break;
+    }
+    case GL_DEBUG_SEVERITY_NOTIFICATION: {
+      LOG_TRACE("[OPENGL] {}", message);
+      break;
+    }
+    default: {
+      LOG_INFO("[OPENGL] {}", message);
+      break;
+    }
   }
 }
 
@@ -39,7 +40,7 @@ Application::Application() : m_Window(nullptr), m_IsRunning(true) {}
 
 Application::~Application() {}
 
-bool Application::Initialize(const char *rom_location) {
+bool Application::Initialize(const char* rom_location) {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
     LOG_ERROR("Failed to initialize SDL: {}", SDL_GetError());
 
@@ -48,11 +49,8 @@ bool Application::Initialize(const char *rom_location) {
   LOG_INFO("SDL Initialized successfully.");
 
   const auto window_flags = SDL_WINDOW_OPENGL;
-  const auto window_title =
-      std::string("CHIP8: ") +
-      std::filesystem::path(rom_location).filename().string();
-  m_Window = SDL_CreateWindow(window_title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT,
-                              window_flags);
+  const auto window_title = std::string("CHIP8: ") + std::filesystem::path(rom_location).filename().string();
+  m_Window = SDL_CreateWindow(window_title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
   if (m_Window == nullptr) {
     LOG_ERROR("SDL_CreateWindow Error: {}", SDL_GetError());
 
@@ -89,17 +87,18 @@ bool Application::Initialize(const char *rom_location) {
   }
   LOG_INFO("GLAD initialized successfully.");
 
-  LOG_TRACE("GL_VERSION: {}", (char *)glGetString(GL_VERSION));
-  LOG_TRACE("GL_VENDOR: {}", (char *)glGetString(GL_VENDOR));
-  LOG_TRACE("GL_RENDERER: {}", (char *)glGetString(GL_RENDERER));
+  LOG_TRACE("GL_VERSION: {}", (char*)glGetString(GL_VERSION));
+  LOG_TRACE("GL_VENDOR: {}", (char*)glGetString(GL_VENDOR));
+  LOG_TRACE("GL_RENDERER: {}", (char*)glGetString(GL_RENDERER));
 
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   glDebugMessageCallback(MessageCallback, nullptr);
 
   m_Interpreter = std::make_unique<Interpreter>(rom_location);
-  m_Display = std::make_unique<Display>();
-
   // m_Interpreter->DumpMemory();
+
+  m_Display = std::make_shared<Display>();
+  m_Interpreter->SetDisplayPointer(m_Display);
 
   return true;
 }
@@ -124,10 +123,10 @@ void Application::ProcessInput() {
 
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
-    case SDL_EVENT_QUIT: {
-      m_IsRunning = false;
-      break;
-    }
+      case SDL_EVENT_QUIT: {
+        m_IsRunning = false;
+        break;
+      }
     }
   }
 }
@@ -152,4 +151,4 @@ void Application::RenderState() {
   SDL_GL_SwapWindow(m_Window);
 }
 
-} // namespace Chip8
+}  // namespace Chip8
