@@ -4,6 +4,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_timer.h>
+#include <filesystem>
 #include <glad/glad.h>
 
 #include <memory>
@@ -47,8 +48,11 @@ bool Application::Initialize(const char *rom_location) {
   LOG_INFO("SDL Initialized successfully.");
 
   const auto window_flags = SDL_WINDOW_OPENGL;
-  m_Window =
-      SDL_CreateWindow("CHIP8", WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
+  const auto window_title =
+      std::string("CHIP8: ") +
+      std::filesystem::path(rom_location).filename().string();
+  m_Window = SDL_CreateWindow(window_title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT,
+                              window_flags);
   if (m_Window == nullptr) {
     LOG_ERROR("SDL_CreateWindow Error: {}", SDL_GetError());
 
@@ -95,7 +99,7 @@ bool Application::Initialize(const char *rom_location) {
   m_Interpreter = std::make_unique<Interpreter>(rom_location);
   m_Display = std::make_unique<Display>();
 
-  m_Interpreter->DumpMemory();
+  // m_Interpreter->DumpMemory();
 
   return true;
 }

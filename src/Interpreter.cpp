@@ -2,8 +2,9 @@
 
 #include "Logging.h"
 
+#include <cstddef>
 #include <cstdio>
-#include <filesystem>
+#include <cstring>
 #include <fstream>
 #include <ios>
 
@@ -20,8 +21,6 @@ Interpreter::Interpreter(const char *rom_location)
 }
 
 void Interpreter::Run(float delta_time) {
-  // LOG_TRACE("Delta Time: {}", delta_time);
-
   this->FetchInstruction();
   this->DecodeInstruction();
   this->ExecuteInstruction();
@@ -41,10 +40,12 @@ void Interpreter::LoadFont() {
 }
 
 void Interpreter::LoadROM(const char *rom_location) {
-  std::ifstream input_file;
-  input_file.open(rom_location, std::ios::binary);
+  std::ifstream input_file(rom_location, std::ios::binary);
 
-  auto rom_size = std::filesystem::file_size(rom_location);
+  input_file.seekg(0, std::ios::end);
+  size_t rom_size = input_file.tellg();
+  input_file.seekg(0, std::ios::beg);
+
   LOG_INFO("ROM location: {}", rom_location);
   LOG_INFO("ROM size: {} bytes", rom_size);
 
@@ -52,11 +53,10 @@ void Interpreter::LoadROM(const char *rom_location) {
     LOG_ERROR("Failed to read ROM: too big");
   }
 
+  char rom_buffer[rom_size];
   if (input_file.is_open()) {
-    for (int i = ROM_START; i < ROM_START + rom_size; ++i) {
-      input_file >> m_Memory[i];
-      fmt::print("{} ", m_Memory[i]);
-    }
+    input_file.read(&rom_buffer[0], rom_size);
+    std::memcpy(&m_Memory[ROM_START], rom_buffer, rom_size);
 
     input_file.close();
   } else {
@@ -72,7 +72,36 @@ void Interpreter::FetchInstruction() {
   m_ProgramCounter += 2;
 }
 
-void Interpreter::DecodeInstruction() {}
+void Interpreter::DecodeInstruction() {
+  auto first_nibble = m_CurrentOpcode >> 12;
+
+  switch (first_nibble) {
+  case 0x0: {
+    LOG_TRACE("ClearScreen");
+    break;
+  }
+  case 0x1: {
+    auto memory_address = m_CurrentOpcode >> 4;
+    LOG_TRACE("Jump to: {}", memory_address);
+    break;
+  }
+  case 0x6: {
+    auto register_name = (m_CurrentOpcode & 0x0F00) >> 8;
+    auto value = (m_CurrentOpcode & 0x00FF);
+    LOG_TRACE("Set register V{:X} to {:X}", register_name, value);
+    break;
+  }
+  case 0x7: {
+    auto register_name = (m_CurrentOpcode & 0x0F00) >> 8;
+    auto value = (m_CurrentOpcode & 0x00FF);
+    LOG_TRACE("Add {:X} to register V{:X}", value, register_name);
+  }
+  case 0xA: {
+    auto value = m_CurrentOpcode >> 4;
+    LOG_TRACE("Set IndexRegister to {:X}", value);
+  }
+  }
+}
 
 void Interpreter::ExecuteInstruction() {}
 
