@@ -33,6 +33,7 @@ void Interpreter::Run(float delta_time) {
     case 0x0: {
       // 00E0: Clear Screen
       if (m_CurrentOpcode == 0x00E0) {
+        m_DisplayPointer->ClearDisplay();
         LOG_TRACE("ClearScreen");
         break;
       }
@@ -85,7 +86,15 @@ void Interpreter::Run(float delta_time) {
     case 0xD: {
       auto x = GET_SECOND_NIBBLE(m_CurrentOpcode);
       auto y = GET_THIRD_NIBBLE(m_CurrentOpcode);
-      auto n = GET_FOURTH_NIBBLE(m_CurrentOpcode);
+      size_t n = GET_FOURTH_NIBBLE(m_CurrentOpcode);
+
+      std::vector<Byte> sprite(n);
+
+      for (int i = m_IndexRegister; i < m_IndexRegister + n; ++i) {
+        sprite[i - m_IndexRegister] = m_Memory[i];
+      }
+
+      m_DisplayPointer->LoadSprite(m_Registers[x], m_Registers[y], sprite);
 
       LOG_TRACE("Draw sprite with height {:X} from V{:X}V{:X}", n, x, y);
       break;

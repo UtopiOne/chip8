@@ -18,8 +18,9 @@ void Logger::Init() {
   spdlog::flush_on(spdlog::level::trace);
 }
 
-void OpenGLDebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
-                                GLsizei length, const GLchar* message, const void* userParam) {
+void Logger::OpenGLDebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                                        GLsizei length, const GLchar* message,
+                                        const void* userParam) {
   // annoying
   if (id == 131185) {
     return;

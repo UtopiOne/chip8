@@ -68,13 +68,15 @@ bool Application::Initialize(const char* rom_location) {
   LOG_TRACE("GL_RENDERER: {}", (char*)glGetString(GL_RENDERER));
 
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-  glDebugMessageCallback(OpenGLDebugMessageCallback, nullptr);
+  glDebugMessageCallback(Logger::OpenGLDebugMessageCallback, nullptr);
 
   m_Interpreter = std::make_unique<Interpreter>(rom_location);
   // m_Interpreter->DumpMemory();
 
   m_Display = std::make_shared<Display>();
   m_Interpreter->SetDisplayPointer(m_Display);
+
+  m_Display->UpdateDisplayData();
 
   return true;
 }

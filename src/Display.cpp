@@ -1,7 +1,9 @@
 #include "Display.h"
 
+#include <fmt/base.h>
 #include <glad/glad.h>
 
+#include <cstdint>
 #include <vector>
 
 #include "Logging.h"
@@ -12,30 +14,29 @@ constexpr auto PIXEL_WIDTH = 2.0 / DISPLAY_WIDTH;
 constexpr auto PIXEL_HEIGHT = 2.0 / DISPLAY_HEIGHT;
 
 Display::Display() {
-  for (int x = 0; x < DISPLAY_WIDTH; ++x) {
-    for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
-      m_PixelData[x][y] = false;
-    }
-  }
+  glGenVertexArrays(1, &m_VAO);
+  glBindVertexArray(m_VAO);
 
-  std::vector<Vector2> positions;
+  glGenBuffers(1, &m_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+  glGenBuffers(1, &m_EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+  glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 2 * sizeof(double), (void*)0);
+  glEnableVertexAttribArray(0);
+}
+
+void Display::UpdateDisplayData() {
+  std::vector<Vector2<double>> positions;
   std::vector<unsigned int> elements;
-
-  for (int x = 0; x < DISPLAY_WIDTH; ++x) {
-    m_PixelData[x][0] = true;
-  }
-  for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
-    m_PixelData[0][y] = true;
-  }
 
   uint16_t cnt = 0;
   for (int x = 0; x < DISPLAY_WIDTH; ++x) {
     for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
-      if (this->GetPixelState(x, y)) {
-        auto bottom_left = Vector2{-1.0 + x * PIXEL_WIDTH, -1.0 + y * PIXEL_HEIGHT};
-        auto top_left = Vector2{-1.0 + x * PIXEL_WIDTH, -1.0 + (y + 1) * PIXEL_HEIGHT};
-        auto bottom_right = Vector2{-1.0 + (x + 1) * PIXEL_WIDTH, -1.0 + y * PIXEL_HEIGHT};
-        auto top_right = Vector2{-1.0 + (x + 1) * PIXEL_WIDTH, -1.0 + (y + 1) * PIXEL_HEIGHT};
+      if (m_PixelData[x][y]) {
+        Vector2<double> bottom_left{-1.0 + x * PIXEL_WIDTH, -1.0 + y * PIXEL_HEIGHT};
+        Vector2<double> top_left{-1.0 + x * PIXEL_WIDTH, -1.0 + (y + 1) * PIXEL_HEIGHT};
+        Vector2<double> bottom_right{-1.0 + (x + 1) * PIXEL_WIDTH, -1.0 + y * PIXEL_HEIGHT};
+        Vector2<double> top_right{-1.0 + (x + 1) * PIXEL_WIDTH, -1.0 + (y + 1) * PIXEL_HEIGHT};
 
         positions.push_back(bottom_left);
         positions.push_back(top_left);
@@ -56,25 +57,57 @@ Display::Display() {
 
   m_Size = elements.size();
 
-  glGenVertexArrays(1, &m_VAO);
-  glBindVertexArray(m_VAO);
-
-  glGenBuffers(1, &m_VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(*positions.data()) * positions.size(), positions.data(),
                GL_STATIC_DRAW);
-
-  glGenBuffers(1, &m_EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(*elements.data()) * elements.size(), elements.data(),
                GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 2, GL_DOUBLE, GL_FALSE, 2 * sizeof(double), (void*)0);
-  glEnableVertexAttribArray(0);
 }
 
 void Display::RenderDisplay() {
   glBindVertexArray(m_VAO);
   glDrawElements(GL_TRIANGLES, m_Size, GL_UNSIGNED_INT, 0);
 }
+
+void Display::ClearDisplay() {
+  for (auto x = 0; x < DISPLAY_WIDTH; ++x) {
+    for (auto y = 0; y < DISPLAY_HEIGHT; ++y) {
+      m_PixelData[x][y] = false;
+    }
+  }
+}
+
+bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& sprite) {
+  Vector2<PixelPos> starting_pos{x % DISPLAY_WIDTH, y % DISPLAY_HEIGHT};
+  const Vector2<PixelPos> end_pos{
+      (x + 8) >= (DISPLAY_WIDTH - 1) ? DISPLAY_WIDTH - 1 : x + 8,
+      static_cast<PixelPos>((y + sprite.size()) >= (DISPLAY_HEIGHT - 1) ? DISPLAY_HEIGHT - 1
+                                                                        : y + sprite.size())};
+
+  LOG_TRACE("Sprite location: {} {}", starting_pos.x, starting_pos.y);
+  LOG_TRACE("Sprite end: {} {}", end_pos.x, end_pos.y);
+  for (auto row : sprite) {
+    fmt::println("{:08b}", row);
+  }
+
+  for (auto x = starting_pos.x; x < end_pos.x; ++x) {
+    for (auto y = starting_pos.y; y < end_pos.y; ++y) {
+      m_PixelData[x][y] = GetNthBit(sprite[y - starting_pos.y], x - starting_pos.x);
+    }
+  }
+
+  this->UpdateDisplayData();
+
+  return true;
+}
+
+bool Display::GetNthBit(Byte byte, int n) {
+  Byte mask = 128 >> n;
+
+  if (byte & mask) {
+    return true;
+  }
+
+  return false;
+}
+
 }  // namespace Chip8
