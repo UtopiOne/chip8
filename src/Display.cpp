@@ -3,6 +3,7 @@
 #include <fmt/base.h>
 #include <glad/glad.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -88,6 +89,8 @@ bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& 
   for (auto row : sprite) {
     fmt::println("{:08b}", row);
   }
+
+  std::reverse(sprite.begin(), sprite.end());
 
   for (auto x = starting_pos.x; x < end_pos.x; ++x) {
     for (auto y = starting_pos.y; y < end_pos.y; ++y) {
