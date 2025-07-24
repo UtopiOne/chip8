@@ -8,6 +8,8 @@ include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
 set(CMAKE_CXX_STANDART 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+add_compile_definitions(LOGGING_ENABLED)
+
 find_package(SDL3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(spdlog REQUIRED)
@@ -31,5 +33,8 @@ add_executable(chip
 
 	src/Logging.cpp
 	src/Logging.h
+
+	src/Shader.cpp
+	src/Shader.h
 )
 target_link_libraries(chip sdl::sdl spdlog::spdlog glm::glm glad)

@@ -70,9 +70,11 @@ bool Application::Initialize(const char* rom_location) {
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   glDebugMessageCallback(Logger::OpenGLDebugMessageCallback, nullptr);
 
-  m_Interpreter = std::make_unique<Interpreter>(rom_location);
-  // m_Interpreter->DumpMemory();
+  m_Shader = std::make_unique<Shader>();
 
+  m_Shader->Load("src/Shaders/display.vert", "src/Shaders/display.frag");
+
+  m_Interpreter = std::make_unique<Interpreter>(rom_location);
   m_Display = std::make_shared<Display>();
   m_Interpreter->SetDisplayPointer(m_Display);
 
@@ -121,8 +123,10 @@ void Application::UpdateState() {
 }
 
 void Application::RenderState() {
-  glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClearColor(155.0 / 255.0, 188.0 / 255.0, 15.0 / 255.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
+
+  m_Shader->SetActive();
 
   m_Display->RenderDisplay();
 

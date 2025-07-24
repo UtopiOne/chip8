@@ -3,7 +3,6 @@
 #include <fmt/base.h>
 #include <glad/glad.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <vector>
 

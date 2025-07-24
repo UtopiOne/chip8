@@ -6,6 +6,7 @@
 
 #include "Display.h"
 #include "Interpreter.h"
+#include "Shader.h"
 
 namespace Chip8 {
 
@@ -32,6 +33,8 @@ private:
 
   std::unique_ptr<Interpreter> m_Interpreter;
   std::shared_ptr<Display> m_Display;
+
+  std::unique_ptr<Shader> m_Shader;
 
   bool m_IsRunning;
   unsigned int m_TicksCount;

@@ -2,7 +2,9 @@
 
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <ios>
 
@@ -37,6 +39,17 @@ void Interpreter::Run(float delta_time) {
         LOG_TRACE("ClearScreen");
         break;
       }
+
+      // 00EE: Return from a subroutine
+      if (m_CurrentOpcode == 0x00EE) {
+        auto memory_address = m_CallStack.top();
+        m_CallStack.pop();
+
+        m_ProgramCounter = memory_address;
+
+        LOG_TRACE("Subroutine returned, memory address set to {}", memory_address);
+        break;
+      }
       break;
     }
 
@@ -50,6 +63,16 @@ void Interpreter::Run(float delta_time) {
       break;
     }
 
+    // 2NNN: Call subroutine at NNN
+    case 0x2: {
+      auto memory_address = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
+      m_CallStack.push(m_ProgramCounter);
+      m_ProgramCounter = memory_address;
+
+      LOG_TRACE("Called subroutine at memory address {}", memory_address);
+      break;
+    }
+
     // 3XNN: Increment program counter by 2 if Vx == NN
     case 0x3: {
       auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
@@ -58,6 +81,41 @@ void Interpreter::Run(float delta_time) {
       if (m_Registers[register_name] == value) {
         m_ProgramCounter += INSTRUCTION_SIZE;
       }
+
+      LOG_TRACE("Skip if V{} == {} ({})", register_name, value,
+                m_Registers[register_name] == value);
+
+      break;
+    }
+
+    // 4XNN: Increment program counter by 2 if Vx != NN
+    case 0x4: {
+      auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto value = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
+
+      if (m_Registers[register_name] != value) {
+        m_ProgramCounter += INSTRUCTION_SIZE;
+      }
+
+      LOG_TRACE("Skip if V{} != {} ({})", register_name, value,
+                !(m_Registers[register_name] == value));
+
+      break;
+    }
+
+    // 5XY0: Increment program counter by 2 if Vx == Vy
+    case 0x5: {
+      auto register_name_x = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto register_name_y = GET_THIRD_NIBBLE(m_CurrentOpcode);
+
+      if (m_Registers[register_name_x] == m_Registers[register_name_y]) {
+        m_ProgramCounter += INSTRUCTION_SIZE;
+      }
+
+      LOG_TRACE("Skip if V{} == V{} ({})", register_name_x, register_name_y,
+                m_Registers[register_name_x] == m_Registers[register_name_y]);
+
+      break;
     }
 
     // 6XNN: Set the register VX to the value NN
@@ -82,12 +140,40 @@ void Interpreter::Run(float delta_time) {
       break;
     }
 
+    // 9XY0: Increment program counter by 2 if Vx != Vy
+    case 0x9: {
+      auto register_name_x = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto register_name_y = GET_THIRD_NIBBLE(m_CurrentOpcode);
+
+      if (m_Registers[register_name_x] != m_Registers[register_name_y]) {
+        m_ProgramCounter += INSTRUCTION_SIZE;
+      }
+
+      LOG_TRACE("Skip if V{} != V{} ({})", register_name_x, register_name_y,
+                !(m_Registers[register_name_x] == m_Registers[register_name_y]));
+
+      break;
+    }
+
     // ANNN: Set Index Register to the value NNN
     case 0xA: {
       auto value = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
       m_IndexRegister = value;
 
       LOG_TRACE("Set IndexRegister to {:X}", value);
+      break;
+    }
+
+    // CXNN: Generate random number & NN into Vx
+    case 0xC: {
+      auto nn = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
+      auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
+
+      Byte number = std::rand();
+
+      m_Registers[register_name] = number & nn;
+      LOG_TRACE("Generated random value {} for V{}", m_Registers[register_name], register_name);
+
       break;
     }
 
@@ -112,7 +198,7 @@ void Interpreter::Run(float delta_time) {
       break;
     }
     default: {
-      LOG_TRACE("Unimplemented or incorrect opcode");
+      LOG_WARN("Unimplemented or incorrect opcode");
       break;
     }
   }
