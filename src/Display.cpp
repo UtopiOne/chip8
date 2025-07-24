@@ -15,6 +15,12 @@ constexpr auto PIXEL_WIDTH = 2.0 / DISPLAY_WIDTH;
 constexpr auto PIXEL_HEIGHT = 2.0 / DISPLAY_HEIGHT;
 
 Display::Display() {
+  for (int x = 0; x < DISPLAY_WIDTH; ++x) {
+    for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
+      m_PixelData[x][y] = false;
+    }
+  }
+
   glGenVertexArrays(1, &m_VAO);
   glBindVertexArray(m_VAO);
 
@@ -34,10 +40,10 @@ void Display::UpdateDisplayData() {
   for (int x = 0; x < DISPLAY_WIDTH; ++x) {
     for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
       if (m_PixelData[x][y]) {
-        Vector2<double> bottom_left{-1.0 + x * PIXEL_WIDTH, -1.0 + y * PIXEL_HEIGHT};
-        Vector2<double> top_left{-1.0 + x * PIXEL_WIDTH, -1.0 + (y + 1) * PIXEL_HEIGHT};
-        Vector2<double> bottom_right{-1.0 + (x + 1) * PIXEL_WIDTH, -1.0 + y * PIXEL_HEIGHT};
-        Vector2<double> top_right{-1.0 + (x + 1) * PIXEL_WIDTH, -1.0 + (y + 1) * PIXEL_HEIGHT};
+        Vector2<double> bottom_left{-1.0 + x * PIXEL_WIDTH, 1.0 - (y + 1) * PIXEL_HEIGHT};
+        Vector2<double> top_left{-1.0 + x * PIXEL_WIDTH, 1.0 - y * PIXEL_HEIGHT};
+        Vector2<double> bottom_right{-1.0 + (x + 1) * PIXEL_WIDTH, 1.0 - (y + 1) * PIXEL_HEIGHT};
+        Vector2<double> top_right{-1.0 + (x + 1) * PIXEL_WIDTH, 1.0 - y * PIXEL_HEIGHT};
 
         positions.push_back(bottom_left);
         positions.push_back(top_left);
@@ -78,6 +84,8 @@ void Display::ClearDisplay() {
 }
 
 bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& sprite) {
+  bool flag = false;
+
   Vector2<PixelPos> starting_pos{x % DISPLAY_WIDTH, y % DISPLAY_HEIGHT};
   const Vector2<PixelPos> end_pos{
       (x + 8) >= (DISPLAY_WIDTH - 1) ? DISPLAY_WIDTH - 1 : x + 8,
@@ -86,21 +94,24 @@ bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& 
 
   LOG_TRACE("Sprite location: {} {}", starting_pos.x, starting_pos.y);
   LOG_TRACE("Sprite end: {} {}", end_pos.x, end_pos.y);
-  for (auto row : sprite) {
-    fmt::println("{:08b}", row);
-  }
-
-  std::reverse(sprite.begin(), sprite.end());
 
   for (auto x = starting_pos.x; x < end_pos.x; ++x) {
     for (auto y = starting_pos.y; y < end_pos.y; ++y) {
-      m_PixelData[x][y] = GetNthBit(sprite[y - starting_pos.y], x - starting_pos.x);
+      PixelState value = GetNthBit(sprite[y - starting_pos.y], x - starting_pos.x);
+
+      if (value) {
+        m_PixelData[x][y] = !m_PixelData[x][y];
+
+        if (!m_PixelData[x][y]) {
+          flag = true;
+        }
+      }
     }
   }
 
   this->UpdateDisplayData();
 
-  return true;
+  return flag;
 }
 
 bool Display::GetNthBit(Byte byte, int n) {

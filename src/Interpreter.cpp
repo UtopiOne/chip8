@@ -50,6 +50,16 @@ void Interpreter::Run(float delta_time) {
       break;
     }
 
+    // 3XNN: Increment program counter by 2 if Vx == NN
+    case 0x3: {
+      auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto value = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
+
+      if (m_Registers[register_name] == value) {
+        m_ProgramCounter += INSTRUCTION_SIZE;
+      }
+    }
+
     // 6XNN: Set the register VX to the value NN
     case 0x6: {
       auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
@@ -94,9 +104,11 @@ void Interpreter::Run(float delta_time) {
         sprite[i - m_IndexRegister] = m_Memory[i];
       }
 
-      m_DisplayPointer->LoadSprite(m_Registers[x], m_Registers[y], sprite);
+      auto flag = m_DisplayPointer->LoadSprite(m_Registers[x], m_Registers[y], sprite);
 
-      LOG_TRACE("Draw sprite with height {:X} from V{:X}V{:X}", n, x, y);
+      m_Registers[0xF] = (Byte)flag;
+
+      LOG_TRACE("Draw sprite with height {:X} at {} {}", n, m_Registers[x], m_Registers[y]);
       break;
     }
     default: {
@@ -106,7 +118,7 @@ void Interpreter::Run(float delta_time) {
   }
 
   if (increment_program_counter) {
-    m_ProgramCounter += 2;
+    m_ProgramCounter += INSTRUCTION_SIZE;
   }
 }
 

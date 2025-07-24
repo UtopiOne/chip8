@@ -11,6 +11,8 @@ using MemoryAddress = uint16_t;
 using Opcode = uint16_t;
 using Byte = uint8_t;
 
+constexpr MemoryAddress INSTRUCTION_SIZE = 2;
+
 constexpr unsigned int MEMORY_SIZE = 4096;
 constexpr unsigned int REGISTER_SIZE = 16;
 
