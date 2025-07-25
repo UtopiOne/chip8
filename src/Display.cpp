@@ -61,6 +61,8 @@ void Display::UpdateDisplayData() {
     }
   }
 
+  LOG_INFO("Updating display...");
+
   m_Size = elements.size();
 
   glBufferData(GL_ARRAY_BUFFER, sizeof(*positions.data()) * positions.size(), positions.data(),

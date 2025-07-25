@@ -34,8 +34,8 @@ bool Shader::Load(const std::string &vertName, const std::string &fragName) {
   return true;
 }
 
-bool Shader::CompileShader(const std::string &fileName, GLenum shaderType, GLuint &outShader) {
-  std::ifstream shaderFile(fileName);
+bool Shader::CompileShader(const std::string &file_name, GLenum shader_type, GLuint &out_shader) {
+  std::ifstream shaderFile(file_name);
   if (shaderFile.is_open()) {
     // Read all the text into a string
     std::stringstream sstream;
@@ -44,17 +44,17 @@ bool Shader::CompileShader(const std::string &fileName, GLenum shaderType, GLuin
     const char *contentsChar = contents.c_str();
 
     // Create a shader of the specified type
-    outShader = glCreateShader(shaderType);
+    out_shader = glCreateShader(shader_type);
     // Set the source characters and try to compile
-    glShaderSource(outShader, 1, &(contentsChar), nullptr);
-    glCompileShader(outShader);
+    glShaderSource(out_shader, 1, &(contentsChar), nullptr);
+    glCompileShader(out_shader);
 
-    if (!IsShaderCompiled(outShader)) {
-      LOG_ERROR("Failed to compile shader {}", fileName.c_str());
+    if (!IsShaderCompiled(out_shader)) {
+      LOG_ERROR("Failed to compile shader {}", file_name.c_str());
       return false;
     }
   } else {
-    LOG_ERROR("Shader file not found: {}", fileName.c_str());
+    LOG_ERROR("Shader file not found: {}", file_name.c_str());
     return false;
   }
 
@@ -105,15 +105,15 @@ void Shader::SetActive() {
 }
 
 void Shader::SetUniformMat4(const glm::mat4 &mat, const std::string &name) {
-  unsigned int uniformLocation = glGetUniformLocation(m_ShaderProgram, name.c_str());
+  unsigned int uniform_location = glGetUniformLocation(m_ShaderProgram, name.c_str());
 
-  glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, &mat[0][0]);
+  glUniformMatrix4fv(uniform_location, 1, GL_FALSE, &mat[0][0]);
 }
 
 void Shader::SetUniformFloat(const float &input, const std::string &name) {
-  unsigned int uniformLocation = glGetUniformLocation(m_ShaderProgram, name.c_str());
+  unsigned int uniform_location = glGetUniformLocation(m_ShaderProgram, name.c_str());
 
-  glUniform1f(uniformLocation, input);
+  glUniform1f(uniform_location, input);
 }
 
 Shader::~Shader() {}

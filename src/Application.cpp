@@ -1,7 +1,6 @@
 #include "Application.h"
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_timer.h>
 #include <glad/glad.h>
 
 #include <filesystem>
@@ -105,6 +104,8 @@ void Application::ProcessInput() {
     switch (event.type) {
       case SDL_EVENT_QUIT: {
         m_IsRunning = false;
+
+        LOG_INFO("Shutdown...");
         break;
       }
     }

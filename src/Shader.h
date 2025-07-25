@@ -26,7 +26,7 @@ private:
   unsigned int m_ShaderProgram;
 
   bool IsShaderCompiled(GLuint shader);
-  bool CompileShader(const std::string &fileName, GLenum shaderType, GLuint &outShader);
+  bool CompileShader(const std::string &file_name, GLenum shader_type, GLuint &out_shader);
 
   bool IsValidProgram();
 };
