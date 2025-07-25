@@ -21,6 +21,8 @@ constexpr int FONTSET_SIZE = 0x50;
 
 constexpr MemoryAddress ROM_START = 0x200;
 
+constexpr unsigned int FLAG_REGISTER = 0xF;
+
 #define GET_FIRST_NIBBLE(x) x >> 12;
 #define GET_SECOND_NIBBLE(x) (x & 0x0F00) >> 8;
 #define GET_THIRD_NIBBLE(x) (x & 0x00F0) >> 4;

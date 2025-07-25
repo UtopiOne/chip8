@@ -1,5 +1,6 @@
 #include "Interpreter.h"
 
+#include <cassert>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -27,7 +28,7 @@ void Interpreter::Run(float delta_time) {
 
   m_CurrentOpcode = (m_Memory[m_ProgramCounter] << 8) | (m_Memory[m_ProgramCounter + 1]);
 
-  LOG_TRACE("Current Opcode: {:04X}", m_CurrentOpcode);
+  LOG_TRACE("{} Current Opcode: {:04X}", m_ProgramCounter, m_CurrentOpcode);
 
   auto first_nibble = GET_FIRST_NIBBLE(m_CurrentOpcode);
 
@@ -55,7 +56,7 @@ void Interpreter::Run(float delta_time) {
 
     // 1NNN: Move (Jump) the program counter to memory address NNN
     case 0x1: {
-      auto memory_address = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
+      MemoryAddress memory_address = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
       m_ProgramCounter = memory_address;
       increment_program_counter = false;
 
@@ -65,9 +66,12 @@ void Interpreter::Run(float delta_time) {
 
     // 2NNN: Call subroutine at NNN
     case 0x2: {
-      auto memory_address = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
       m_CallStack.push(m_ProgramCounter);
+
+      MemoryAddress memory_address = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
       m_ProgramCounter = memory_address;
+
+      increment_program_counter = false;
 
       LOG_TRACE("Called subroutine at memory address {}", memory_address);
       break;
@@ -140,6 +144,82 @@ void Interpreter::Run(float delta_time) {
       break;
     }
 
+    // 8XYN: Logical and arithmetic instructions
+    case 0x8: {
+      auto type = GET_FOURTH_NIBBLE(m_CurrentOpcode);
+      auto register_name_x = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto register_name_y = GET_THIRD_NIBBLE(m_CurrentOpcode);
+
+      switch (type) {
+        // 8XY0: Set
+        case 0x0: {
+          m_Registers[register_name_x] = m_Registers[register_name_y];
+          LOG_TRACE("Set V{} to the value of V{}: {}", register_name_x, register_name_y,
+                    m_Registers[register_name_y]);
+          break;
+        }
+
+        // 8XY1: Binary OR
+        case 0x1: {
+          m_Registers[register_name_x] |= m_Registers[register_name_y];
+          LOG_TRACE("Binary OR V{} and V{}", register_name_x, register_name_y);
+
+          break;
+        }
+
+        // 8XY2: Binary AND
+        case 0x2: {
+          m_Registers[register_name_x] &= m_Registers[register_name_y];
+          LOG_TRACE("Binary AND V{} and V{}", register_name_x, register_name_y);
+
+          break;
+        }
+
+        // 8XY3: Logical XOR
+        case 0x3: {
+          m_Registers[register_name_x] ^= m_Registers[register_name_y];
+          LOG_TRACE("Binary XOR V{} and V{}", register_name_x, register_name_y);
+
+          break;
+        }
+
+        // 8XY4: Add
+        case 0x4: {
+          m_Registers[register_name_x] += m_Registers[register_name_y];
+          LOG_TRACE("Add V{} and V{}", register_name_x, register_name_y);
+
+          break;
+        }
+
+        // 8XY5: Subtract VX - VY
+        case 0x5: {
+          m_Registers[FLAG_REGISTER] = 0;
+          if (m_Registers[register_name_x] > m_Registers[register_name_y]) {
+            m_Registers[FLAG_REGISTER] = 1;
+          }
+
+          m_Registers[register_name_x] -= m_Registers[register_name_y];
+          LOG_TRACE("Subtracted V{} - V{}", register_name_x, register_name_y);
+
+          break;
+        }
+
+        // 8XY7: Subtract VY - VX
+        case 0x7: {
+          m_Registers[FLAG_REGISTER] = 0;
+          if (m_Registers[register_name_y] > m_Registers[register_name_x]) {
+            m_Registers[FLAG_REGISTER] = 1;
+          }
+
+          m_Registers[register_name_y] -= m_Registers[register_name_x];
+          LOG_TRACE("Subtracted V{} - V{}", register_name_y, register_name_x);
+
+          break;
+        }
+      }
+      break;
+    }
+
     // 9XY0: Increment program counter by 2 if Vx != Vy
     case 0x9: {
       auto register_name_x = GET_SECOND_NIBBLE(m_CurrentOpcode);
@@ -192,7 +272,7 @@ void Interpreter::Run(float delta_time) {
 
       auto flag = m_DisplayPointer->LoadSprite(m_Registers[x], m_Registers[y], sprite);
 
-      m_Registers[0xF] = (Byte)flag;
+      m_Registers[FLAG_REGISTER] = (Byte)flag;
 
       LOG_TRACE("Draw sprite with height {:X} at {} {}", n, m_Registers[x], m_Registers[y]);
       break;

@@ -3,7 +3,10 @@
 #include <SDL3/SDL.h>
 #include <glad/glad.h>
 
+#include <complex>
 #include <filesystem>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 
 #include "Logging.h"
@@ -127,7 +130,10 @@ void Application::RenderState() {
   glClearColor(155.0 / 255.0, 188.0 / 255.0, 15.0 / 255.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
+  glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+
   m_Shader->SetActive();
+  m_Shader->SetUniformMat4(projection, "uProjection");
 
   m_Display->RenderDisplay();
 
