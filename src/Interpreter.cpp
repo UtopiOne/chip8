@@ -204,6 +204,20 @@ void Interpreter::Run(float delta_time) {
           break;
         }
 
+        // 8XY6: Shift right
+        case 0x6: {
+          m_Registers[register_name_x] = m_Registers[register_name_y];
+
+          Byte flag = GET_LAST_BIT(m_Registers[register_name_x]);
+
+          m_Registers[register_name_x] >>= 1;
+
+          m_Registers[FLAG_REGISTER] = flag;
+          LOG_TRACE("Set V{} to V{} and shifted 1 bit right", register_name_x, register_name_y);
+
+          break;
+        }
+
         // 8XY7: Subtract VY - VX
         case 0x7: {
           m_Registers[FLAG_REGISTER] = 0;
@@ -211,8 +225,23 @@ void Interpreter::Run(float delta_time) {
             m_Registers[FLAG_REGISTER] = 1;
           }
 
-          m_Registers[register_name_y] -= m_Registers[register_name_x];
+          m_Registers[register_name_x] =
+              m_Registers[register_name_y] - m_Registers[register_name_x];
           LOG_TRACE("Subtracted V{} - V{}", register_name_y, register_name_x);
+
+          break;
+        }
+
+        // 8XYE: Shift left
+        case 0xE: {
+          m_Registers[register_name_x] = m_Registers[register_name_y];
+
+          Byte flag = GET_FIRST_BIT(m_Registers[register_name_x]);
+
+          m_Registers[register_name_x] <<= 1;
+
+          m_Registers[FLAG_REGISTER] = flag;
+          LOG_TRACE("Set V{} to V{} and shifted 1 bit left", register_name_x, register_name_y);
 
           break;
         }
@@ -241,6 +270,17 @@ void Interpreter::Run(float delta_time) {
       m_IndexRegister = value;
 
       LOG_TRACE("Set IndexRegister to {:X}", value);
+      break;
+    }
+
+    // BNNN: Jump with offset
+    case 0xB: {
+      auto address = GET_LAST_THREE_NIBBLES(m_CurrentOpcode);
+      m_ProgramCounter = address + m_Registers[0x0];
+      increment_program_counter = false;
+
+      LOG_TRACE("Jumped to {} with offset {}", address, m_Registers[0x0]);
+
       break;
     }
 

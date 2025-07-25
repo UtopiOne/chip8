@@ -28,6 +28,9 @@ constexpr unsigned int FLAG_REGISTER = 0xF;
 #define GET_THIRD_NIBBLE(x) (x & 0x00F0) >> 4;
 #define GET_FOURTH_NIBBLE(x) (x & 0x000F);
 
+#define GET_FIRST_BIT(x) (x & 0b10000000) >> 7;
+#define GET_LAST_BIT(x) (x & 0b00000001);
+
 #define GET_LAST_THREE_NIBBLES(x) (x & 0x0FFF);
 #define GET_LAST_TWO_NIBBLES(x) (x & 0x00FF);
 

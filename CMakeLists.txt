@@ -5,6 +5,12 @@ project(chip
 
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
 
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 set(CMAKE_CXX_STANDART 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
