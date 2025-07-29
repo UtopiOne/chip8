@@ -346,13 +346,6 @@ void Interpreter::Run(float delta_time) {
   }
 }
 
-void Interpreter::DumpMemory() {
-  for (int i = 0; i < MEMORY_SIZE; ++i) {
-    fmt::print("{:02X} ", m_Memory[i]);
-  }
-  fmt::println("");
-}
-
 void Interpreter::LoadFont() {
   for (int i = 0; i < FONTSET_SIZE; ++i) {
     m_Memory[i + FONTSET_START] = Font[i];

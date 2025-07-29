@@ -2,6 +2,7 @@
 sdl/3.2.14
 spdlog/1.15.3
 glm/1.0.1
+imgui/1.92.0
 
 [generators]
 CMakeDeps

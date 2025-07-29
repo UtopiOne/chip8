@@ -2,8 +2,10 @@
 
 #include <SDL3/SDL.h>
 #include <glad/glad.h>
+#include <imgui.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_sdl3.h>
 
-#include <complex>
 #include <filesystem>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
@@ -72,8 +74,21 @@ bool Application::Initialize(const char* rom_location) {
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   glDebugMessageCallback(Logger::OpenGLDebugMessageCallback, nullptr);
 
-  m_Shader = std::make_unique<Shader>();
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
 
+  ImGuiIO& io = ImGui::GetIO();
+  (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+  ImGui::StyleColorsDark();
+  ImGuiStyle& style = ImGui::GetStyle();
+
+  ImGui_ImplSDL3_InitForOpenGL(m_Window, m_GLContext);
+  ImGui_ImplOpenGL3_Init("#version 330");
+
+  m_Shader = std::make_unique<Shader>();
   m_Shader->Load("src/Shaders/display.vert", "src/Shaders/display.frag");
 
   m_Interpreter = std::make_unique<Interpreter>(rom_location);
@@ -94,8 +109,12 @@ void Application::Run() {
 }
 
 void Application::Shutdown() {
-  SDL_DestroyWindow(m_Window);
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplSDL3_Shutdown();
+  ImGui::DestroyContext();
+
   SDL_GL_DestroyContext(m_GLContext);
+  SDL_DestroyWindow(m_Window);
 
   SDL_Quit();
 }
@@ -104,6 +123,8 @@ void Application::ProcessInput() {
   SDL_Event event;
 
   while (SDL_PollEvent(&event)) {
+    ImGui_ImplSDL3_ProcessEvent(&event);
+
     switch (event.type) {
       case SDL_EVENT_QUIT: {
         m_IsRunning = false;
@@ -127,6 +148,20 @@ void Application::UpdateState() {
 }
 
 void Application::RenderState() {
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplSDL3_NewFrame();
+  ImGui::NewFrame();
+
+  static int counter = 0;
+
+  ImGui::Begin("Hello World");
+  if (ImGui::Button("Button")) counter++;
+  ImGui::Text("%d", counter);
+
+  ImGui::End();
+
+  ImGui::Render();
+
   glClearColor(155.0 / 255.0, 188.0 / 255.0, 15.0 / 255.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
@@ -137,6 +172,7 @@ void Application::RenderState() {
 
   m_Display->RenderDisplay();
 
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   SDL_GL_SwapWindow(m_Window);
 }
 

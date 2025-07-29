@@ -65,8 +65,6 @@ public:
     m_DisplayPointer = display_pointer;
   }
 
-  void DumpMemory();
-
 private:
   void LoadROM(const char *rom_location);
   void LoadFont();

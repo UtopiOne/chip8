@@ -19,6 +19,7 @@ add_compile_definitions(LOGGING_ENABLED)
 find_package(SDL3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(imgui REQUIRED)
 
 add_library(glad
 	vendor/glad/src/glad.c
@@ -42,5 +43,13 @@ add_executable(chip
 
 	src/Shader.cpp
 	src/Shader.h
+
+	vendor/imgui/imgui_impl_sdl3.cpp
+	vendor/imgui/imgui_impl_sdl3.h
+	vendor/imgui/imgui_impl_opengl3.cpp
+	vendor/imgui/imgui_impl_opengl3.h
+	vendor/imgui/imgui_impl_opengl3_loader.h
 )
-target_link_libraries(chip sdl::sdl spdlog::spdlog glm::glm glad)
+
+target_include_directories(chip PUBLIC vendor/imgui)
+target_link_libraries(chip sdl::sdl spdlog::spdlog glm::glm imgui::imgui glad)
