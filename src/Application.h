@@ -10,8 +10,8 @@
 
 namespace Chip8 {
 
-constexpr uint16_t WINDOW_WIDTH = 640;
-constexpr uint16_t WINDOW_HEIGHT = 320;
+constexpr uint16_t WINDOW_WIDTH = 1920;
+constexpr uint16_t WINDOW_HEIGHT = 1080;
 
 class Application {
 public:

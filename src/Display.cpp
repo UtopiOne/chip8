@@ -87,11 +87,11 @@ void Display::ClearDisplay() {
 bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& sprite) {
   bool flag = false;
 
-  Vector2<PixelPos> starting_pos{x % DISPLAY_WIDTH, y % DISPLAY_HEIGHT};
+  const Vector2<PixelPos> starting_pos{x % DISPLAY_WIDTH, y % DISPLAY_HEIGHT};
   const Vector2<PixelPos> end_pos{
-      (x + 8) >= (DISPLAY_WIDTH - 1) ? DISPLAY_WIDTH - 1 : x + 8,
-      static_cast<PixelPos>((y + sprite.size()) >= (DISPLAY_HEIGHT - 1) ? DISPLAY_HEIGHT - 1
-                                                                        : y + sprite.size())};
+      (starting_pos.x + 8) >= (DISPLAY_WIDTH) ? DISPLAY_WIDTH : x + 8,
+      static_cast<PixelPos>(
+          (starting_pos.y + sprite.size()) >= DISPLAY_HEIGHT ? DISPLAY_HEIGHT : y + sprite.size())};
 
   LOG_TRACE("Sprite location: {} {}", starting_pos.x, starting_pos.y);
   LOG_TRACE("Sprite end: {} {}", end_pos.x, end_pos.y);
@@ -109,8 +109,6 @@ bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& 
       }
     }
   }
-
-  this->UpdateDisplayData();
 
   return flag;
 }

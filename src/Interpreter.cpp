@@ -311,12 +311,30 @@ void Interpreter::Run(float delta_time) {
       }
 
       auto flag = m_DisplayPointer->LoadSprite(m_Registers[x], m_Registers[y], sprite);
+      m_DisplayPointer->UpdateDisplayData();
 
       m_Registers[FLAG_REGISTER] = (Byte)flag;
 
       LOG_TRACE("Draw sprite with height {:X} at {} {}", n, m_Registers[x], m_Registers[y]);
       break;
     }
+
+    case 0xF: {
+      auto type = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
+      auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
+
+      switch (type) {
+        // FX1E: I = I + Vx
+        case 0x1E: {
+          m_IndexRegister += m_Registers[register_name];
+          LOG_TRACE("I += V{}", register_name);
+          break;
+        }
+      }
+
+      break;
+    }
+
     default: {
       LOG_WARN("Unimplemented or incorrect opcode");
       break;
