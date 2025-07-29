@@ -58,6 +58,7 @@ const Byte Font[FONTSET_SIZE] = {
 class Interpreter {
 public:
   Interpreter(const char *rom_location);
+  void Restart(const char *rom_location);
 
   void Run(float delta_time);
   void DisplayDebugMenu();

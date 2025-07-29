@@ -82,6 +82,8 @@ void Display::ClearDisplay() {
       m_PixelData[x][y] = false;
     }
   }
+
+  this->UpdateDisplayData();
 }
 
 bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& sprite) {

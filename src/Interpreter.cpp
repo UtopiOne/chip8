@@ -348,8 +348,24 @@ void Interpreter::Run(float delta_time) {
   }
 }
 
+void Interpreter::Restart(const char *rom_location) {
+  for (int i = 0; i < MEMORY_SIZE; ++i) {
+    m_Memory[i] = 0;
+  }
+
+  this->LoadFont();
+  this->LoadROM(rom_location);
+
+  m_DisplayPointer->ClearDisplay();
+
+  m_IndexRegister = 0;
+  m_ProgramCounter = ROM_START;
+}
+
 void Interpreter::DisplayDebugMenu() {
   ImGuiTableFlags table_flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
+
+  ImGui::Text("Current opcode: %04X", m_CurrentOpcode);
 
   if (ImGui::BeginTable("Registers", REGISTER_SIZE, table_flags)) {
     for (int row = 0; row < 2; ++row) {
@@ -366,6 +382,9 @@ void Interpreter::DisplayDebugMenu() {
     }
     ImGui::EndTable();
   }
+
+  ImGui::Text("Index Register: %d", m_IndexRegister);
+  ImGui::Text("Program Counter: %d", m_ProgramCounter);
 }
 
 void Interpreter::LoadFont() {

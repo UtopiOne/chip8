@@ -15,12 +15,12 @@
 
 namespace Chip8 {
 
-Application::Application()
-    : m_Window(nullptr), m_IsRunning(true), m_StepThrough(true), m_AdvanceNextStep(false) {}
+Application::Application(const char* rom_location) : m_RomLocation(rom_location) {}
 
 Application::~Application() {}
 
-bool Application::Initialize(const char* rom_location) {
+bool Application::Initialize() {
+  // Init SDL
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
     LOG_ERROR("Failed to initialize SDL: {}", SDL_GetError());
 
@@ -28,9 +28,10 @@ bool Application::Initialize(const char* rom_location) {
   }
   LOG_INFO("SDL Initialized successfully.");
 
+  // Init window
   const auto window_flags = SDL_WINDOW_OPENGL;
   const auto window_title =
-      std::string("CHIP8: ") + std::filesystem::path(rom_location).filename().string();
+      std::string("CHIP8: ") + std::filesystem::path(m_RomLocation).filename().string();
   m_Window = SDL_CreateWindow(window_title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
   if (m_Window == nullptr) {
     LOG_ERROR("SDL_CreateWindow Error: {}", SDL_GetError());
@@ -39,6 +40,7 @@ bool Application::Initialize(const char* rom_location) {
   }
   LOG_INFO("Window initialized successfully.");
 
+  // Init OpenGL context
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -61,6 +63,7 @@ bool Application::Initialize(const char* rom_location) {
 
   SDL_GL_MakeCurrent(m_Window, m_GLContext);
 
+  // Init OpenGL loader (GLAD)
   if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
     LOG_ERROR("Failed to initialize GLAD.");
 
@@ -75,6 +78,7 @@ bool Application::Initialize(const char* rom_location) {
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   glDebugMessageCallback(Logger::OpenGLDebugMessageCallback, nullptr);
 
+  // Init ImGui
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
 
@@ -89,10 +93,12 @@ bool Application::Initialize(const char* rom_location) {
   ImGui_ImplSDL3_InitForOpenGL(m_Window, m_GLContext);
   ImGui_ImplOpenGL3_Init("#version 330");
 
+  // Init shader
   m_Shader = std::make_unique<Shader>();
   m_Shader->Load("src/Shaders/display.vert", "src/Shaders/display.frag");
 
-  m_Interpreter = std::make_unique<Interpreter>(rom_location);
+  // Init everything else
+  m_Interpreter = std::make_unique<Interpreter>(m_RomLocation);
   m_Display = std::make_shared<Display>();
   m_Interpreter->SetDisplayPointer(m_Display);
 
@@ -157,6 +163,10 @@ void Application::RenderState() {
   ImGui::NewFrame();
 
   ImGui::Begin("Settings");
+
+  if (ImGui::Button("Restart")) {
+    m_Interpreter->Restart(m_RomLocation);
+  }
 
   ImGui::ColorEdit3("BG color", (float*)&m_BgColor);
 

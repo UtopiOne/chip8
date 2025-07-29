@@ -8,11 +8,12 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  Chip8::Logger::Init();
-  Chip8::Application application;
-
   auto rom_location = argv[1];
-  if (application.Initialize(rom_location)) {
+
+  Chip8::Logger::Init();
+  Chip8::Application application(rom_location);
+
+  if (application.Initialize()) {
     application.Run();
   }
 

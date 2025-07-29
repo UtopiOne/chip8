@@ -16,10 +16,10 @@ constexpr uint16_t WINDOW_HEIGHT = 1080;
 
 class Application {
 public:
-  Application();
+  Application(const char* rom_location);
   ~Application();
 
-  bool Initialize(const char* rom_location);
+  bool Initialize();
   void Run();
   void Shutdown();
 
@@ -29,7 +29,7 @@ private:
   void RenderState();
 
 private:
-  SDL_Window* m_Window;
+  SDL_Window* m_Window = nullptr;
   SDL_GLContext m_GLContext;
 
   std::unique_ptr<Interpreter> m_Interpreter;
@@ -38,11 +38,12 @@ private:
   std::unique_ptr<Shader> m_Shader;
 
   ImVec4 m_BgColor;
+  const char* m_RomLocation;
 
-  bool m_StepThrough;
-  bool m_AdvanceNextStep;
+  bool m_StepThrough = true;
+  bool m_AdvanceNextStep = false;
 
-  bool m_IsRunning;
+  bool m_IsRunning = true;
   unsigned int m_TicksCount;
 };
 }  // namespace Chip8
