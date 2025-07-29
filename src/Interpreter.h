@@ -60,6 +60,7 @@ public:
   Interpreter(const char *rom_location);
 
   void Run(float delta_time);
+  void DisplayDebugMenu();
 
   void SetDisplayPointer(std::shared_ptr<Display> &display_pointer) {
     m_DisplayPointer = display_pointer;
@@ -81,6 +82,8 @@ private:
   std::stack<MemoryAddress> m_CallStack;
 
   Opcode m_CurrentOpcode;
+
+  bool m_DebugStepThrough;
 };
 
 }  // namespace Chip8

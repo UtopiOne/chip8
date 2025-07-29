@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <imgui.h>
 
 #include <memory>
 
@@ -35,6 +36,11 @@ private:
   std::shared_ptr<Display> m_Display;
 
   std::unique_ptr<Shader> m_Shader;
+
+  ImVec4 m_BgColor;
+
+  bool m_StepThrough;
+  bool m_AdvanceNextStep;
 
   bool m_IsRunning;
   unsigned int m_TicksCount;

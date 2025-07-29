@@ -15,7 +15,8 @@
 
 namespace Chip8 {
 
-Application::Application() : m_Window(nullptr), m_IsRunning(true) {}
+Application::Application()
+    : m_Window(nullptr), m_IsRunning(true), m_StepThrough(true), m_AdvanceNextStep(false) {}
 
 Application::~Application() {}
 
@@ -144,7 +145,10 @@ void Application::UpdateState() {
     delta_time = 0.05f;
   }
 
-  m_Interpreter->Run(delta_time);
+  if ((m_StepThrough && m_AdvanceNextStep) || !m_StepThrough) {
+    m_Interpreter->Run(delta_time);
+    m_AdvanceNextStep = false;
+  }
 }
 
 void Application::RenderState() {
@@ -152,17 +156,22 @@ void Application::RenderState() {
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
 
-  static int counter = 0;
+  ImGui::Begin("Settings");
 
-  ImGui::Begin("Hello World");
-  if (ImGui::Button("Button")) counter++;
-  ImGui::Text("%d", counter);
+  ImGui::ColorEdit3("BG color", (float*)&m_BgColor);
 
+  if (ImGui::CollapsingHeader("Debug")) {
+    ImGui::Checkbox("Step through", &m_StepThrough);
+    if (ImGui::Button("Next step")) {
+      m_AdvanceNextStep = true;
+    }
+    m_Interpreter->DisplayDebugMenu();
+  }
   ImGui::End();
 
   ImGui::Render();
 
-  glClearColor(155.0 / 255.0, 188.0 / 255.0, 15.0 / 255.0, 1.0);
+  glClearColor(m_BgColor.x, m_BgColor.y, m_BgColor.z, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
   glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);

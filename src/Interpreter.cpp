@@ -1,5 +1,7 @@
 #include "Interpreter.h"
 
+#include <imgui.h>
+
 #include <cassert>
 #include <cstddef>
 #include <cstdio>
@@ -343,6 +345,26 @@ void Interpreter::Run(float delta_time) {
 
   if (increment_program_counter) {
     m_ProgramCounter += INSTRUCTION_SIZE;
+  }
+}
+
+void Interpreter::DisplayDebugMenu() {
+  ImGuiTableFlags table_flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
+
+  if (ImGui::BeginTable("Registers", REGISTER_SIZE, table_flags)) {
+    for (int row = 0; row < 2; ++row) {
+      ImGui::TableNextRow();
+      for (int register_name = 0; register_name < REGISTER_SIZE; ++register_name) {
+        ImGui::TableNextColumn();
+
+        if (row == 0) {
+          ImGui::Text("V%X", register_name);
+        } else {
+          ImGui::Text("%d", m_Registers[register_name]);
+        }
+      }
+    }
+    ImGui::EndTable();
   }
 }
 
