@@ -40,7 +40,7 @@ void Logger::OpenGLDebugMessageCallback(GLenum source, GLenum type, GLuint id, G
       break;
     }
     case GL_DEBUG_SEVERITY_NOTIFICATION: {
-      LOG_TRACE("[OPENGL] id: {} {}", message);
+      LOG_TRACE("[OPENGL] {}", message);
       break;
     }
     default: {

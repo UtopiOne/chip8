@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
+#include <chrono>
 #include <memory>
 
 #include "Audio.h"
@@ -14,6 +15,8 @@ namespace Chip8 {
 
 constexpr uint16_t WINDOW_WIDTH = 1280;
 constexpr uint16_t WINDOW_HEIGHT = 720;
+
+constexpr unsigned int OPS_PER_SECONDS = 500;
 
 class Application {
 public:
@@ -47,6 +50,8 @@ private:
   bool m_AdvanceNextStep = false;
 
   bool m_IsRunning = true;
-  unsigned int m_TicksCount;
+
+  unsigned int m_TicksCount = 0;
+  unsigned int m_TicksElapsed = 0;
 };
 }  // namespace Chip8

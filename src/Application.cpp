@@ -4,21 +4,26 @@
 #include <SDL3/SDL_oldnames.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_video.h>
 #include <glad/glad.h>
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl3.h>
 
+#include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
+#include <iostream>
 #include <memory>
 
 #include "Audio.h"
 #include "Logging.h"
 
 namespace Chip8 {
+
+const glm::mat4 PROJECTION = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 
 Application::Application(const char* rom_location)
     : m_RomLocation(rom_location), m_Interpreter(rom_location) {}
@@ -68,6 +73,7 @@ bool Application::Initialize() {
   LOG_INFO("OpenGL context initialized successfully.");
 
   SDL_GL_MakeCurrent(m_Window, m_GLContext);
+  SDL_GL_SetSwapInterval(0);
 
   // Init OpenGL loader (GLAD)
   if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
@@ -108,6 +114,8 @@ bool Application::Initialize() {
   // Init shader
   m_Shader = std::make_unique<Shader>();
   m_Shader->Load("src/Shaders/display.vert", "src/Shaders/display.frag");
+  m_Shader->SetActive();
+  m_Shader->SetUniformMat4(PROJECTION, "uProjection");
 
   // Init everything else
   m_Display = std::make_shared<Display>();
@@ -158,10 +166,21 @@ void Application::ProcessInput() {
 }
 
 void Application::UpdateState() {
-  if ((m_StepThrough && m_AdvanceNextStep) || !m_StepThrough) {
-    m_Interpreter.Run();
-    m_AdvanceNextStep = false;
+  const int time_cap = 1000 / OPS_PER_SECONDS;
+
+  if (m_TicksElapsed > time_cap) {
+    if (((m_StepThrough && m_AdvanceNextStep) || !m_StepThrough)) {
+      m_Interpreter.Run();
+      m_AdvanceNextStep = false;
+    }
+
+    m_TicksElapsed = 0;
+
+  } else {
+    m_TicksElapsed += SDL_GetTicks() - m_TicksCount;
   }
+
+  m_TicksCount = SDL_GetTicks();
 }
 
 void Application::RenderState() {
@@ -176,11 +195,6 @@ void Application::RenderState() {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-
-  m_Shader->SetActive();
-  m_Shader->SetUniformMat4(projection, "uProjection");
-
   m_Display->RenderDisplay();
 
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -189,9 +203,6 @@ void Application::RenderState() {
 
 void Application::RenderDebugUI() {
   ImGui::Begin("Settings");
-
-  ImGui::Text("FPS: %f", 1000.0 / (SDL_GetTicks() - m_TicksCount));
-  m_TicksCount = SDL_GetTicks();
 
   if (ImGui::Button("Restart")) {
     m_Interpreter.Restart(m_RomLocation);

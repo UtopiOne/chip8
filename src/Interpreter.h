@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <stack>
@@ -23,6 +24,8 @@ constexpr int FONTSET_SIZE = 0x50;
 constexpr MemoryAddress ROM_START = 0x200;
 
 constexpr unsigned int FLAG_REGISTER = 0xF;
+
+constexpr unsigned int TIMER_CAP = 1000 / 60;
 
 #define GET_FIRST_NIBBLE(x) x >> 12;
 #define GET_SECOND_NIBBLE(x) (x & 0x0F00) >> 8;
@@ -75,6 +78,8 @@ private:
   void LoadROM(const char *rom_location);
   void LoadFont();
 
+  void DecrementTimers();
+
 private:
   std::shared_ptr<Display> m_DisplayPointer;
   std::shared_ptr<AudioHandler> m_AudioPoinater;
@@ -90,6 +95,9 @@ private:
   Opcode m_CurrentOpcode;
 
   bool m_DebugStepThrough;
+
+  unsigned int m_TicksCount;
+  unsigned int m_TicksElapsed;
 };
 
 }  // namespace Chip8

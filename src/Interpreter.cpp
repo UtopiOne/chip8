@@ -1,6 +1,7 @@
 #include "Interpreter.h"
 
 #include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_timer.h>
 #include <imgui.h>
 
 #include <cassert>
@@ -30,16 +31,7 @@ void Interpreter::Run() {
 
   auto first_nibble = GET_FIRST_NIBBLE(m_CurrentOpcode);
 
-  if (m_DelayTimer > 0) {
-    m_DelayTimer--;
-  }
-
-  if (m_SoundTimer > 0) {
-    m_SoundTimer--;
-    if (m_AudioPoinater->IsStreamPaused()) m_AudioPoinater->UnpauseStream();
-  } else {
-    if (!m_AudioPoinater->IsStreamPaused()) m_AudioPoinater->PauseStream();
-  }
+  this->DecrementTimers();
 
   switch (first_nibble) {
     // DXYN: Display N-pixel tall sprite from the index register to the XY
@@ -217,6 +209,12 @@ void Interpreter::Run() {
         // 8XY4: Add
         case 0x4: {
           m_Registers[register_name_x] += m_Registers[register_name_y];
+          if ((int)(m_Registers[register_name_x] + m_Registers[register_name_y]) > 255) {
+            m_Registers[FLAG_REGISTER] = 1;
+          } else {
+            m_Registers[FLAG_REGISTER] = 0;
+          }
+
           LOG_TRACE("Add V{} and V{}", register_name_x, register_name_y);
 
           break;
@@ -224,12 +222,11 @@ void Interpreter::Run() {
 
         // 8XY5: Subtract VX - VY
         case 0x5: {
-          m_Registers[FLAG_REGISTER] = 0;
-          if (m_Registers[register_name_x] > m_Registers[register_name_y]) {
-            m_Registers[FLAG_REGISTER] = 1;
-          }
+          m_Registers[FLAG_REGISTER] =
+              (m_Registers[register_name_x] > m_Registers[register_name_y]) ? 1 : 0;
+          m_Registers[register_name_x] =
+              m_Registers[register_name_x] - m_Registers[register_name_y];
 
-          m_Registers[register_name_x] -= m_Registers[register_name_y];
           LOG_TRACE("Subtracted V{} - V{}", register_name_x, register_name_y);
 
           break;
@@ -572,6 +569,26 @@ void Interpreter::LoadROM(const char *rom_location) {
   } else {
     LOG_ERROR("Error: Unable to find/read the input file.");
   }
+}
+
+void Interpreter::DecrementTimers() {
+  if (m_TicksElapsed > TIMER_CAP) {
+    if (m_DelayTimer > 0) {
+      m_DelayTimer--;
+    }
+
+    if (m_SoundTimer > 0) {
+      m_SoundTimer--;
+      if (m_AudioPoinater->IsStreamPaused()) m_AudioPoinater->UnpauseStream();
+    } else {
+      if (!m_AudioPoinater->IsStreamPaused()) m_AudioPoinater->PauseStream();
+    }
+
+    m_TicksElapsed = 0;
+  } else {
+    m_TicksElapsed += SDL_GetTicks() - m_TicksCount;
+  }
+  m_TicksCount = SDL_GetTicks();
 }
 
 }  // namespace Chip8
