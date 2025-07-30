@@ -74,12 +74,12 @@ private:
 private:
   std::shared_ptr<Display> m_DisplayPointer;
 
-  std::array<Byte, MEMORY_SIZE> m_Memory;
-  std::array<Byte, REGISTER_SIZE> m_Registers;
+  std::array<Byte, MEMORY_SIZE> m_Memory{0};
+  std::array<Byte, REGISTER_SIZE> m_Registers{0};
 
   Byte m_DelayTimer, m_SoundTimer;
 
-  MemoryAddress m_ProgramCounter, m_IndexRegister;
+  MemoryAddress m_ProgramCounter = ROM_START, m_IndexRegister = 0;
   std::stack<MemoryAddress> m_CallStack;
 
   Opcode m_CurrentOpcode;

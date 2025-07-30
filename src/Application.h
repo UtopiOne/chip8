@@ -11,8 +11,8 @@
 
 namespace Chip8 {
 
-constexpr uint16_t WINDOW_WIDTH = 1920;
-constexpr uint16_t WINDOW_HEIGHT = 1080;
+constexpr uint16_t WINDOW_WIDTH = 1280;
+constexpr uint16_t WINDOW_HEIGHT = 720;
 
 class Application {
 public:
@@ -33,6 +33,8 @@ private:
 private:
   SDL_Window* m_Window = nullptr;
   SDL_GLContext m_GLContext;
+
+  SDL_AudioStream* m_AudioStream;
 
   std::unique_ptr<Interpreter> m_Interpreter;
   std::shared_ptr<Display> m_Display;

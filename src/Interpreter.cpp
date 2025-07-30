@@ -19,10 +19,6 @@ namespace Chip8 {
 
 Interpreter::Interpreter(const char *rom_location)
     : m_IndexRegister(0), m_ProgramCounter(ROM_START) {
-  for (int i = 0; i < MEMORY_SIZE; ++i) {
-    m_Memory[i] = 0;
-  }
-
   this->LoadFont();
   this->LoadROM(rom_location);
 }
@@ -31,8 +27,6 @@ void Interpreter::Run() {
   bool increment_program_counter = true;
 
   m_CurrentOpcode = (m_Memory[m_ProgramCounter] << 8) | (m_Memory[m_ProgramCounter + 1]);
-
-  LOG_TRACE("{} Current Opcode: {:04X}", m_ProgramCounter, m_CurrentOpcode);
 
   auto first_nibble = GET_FIRST_NIBBLE(m_CurrentOpcode);
 

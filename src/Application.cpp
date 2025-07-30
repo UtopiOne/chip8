@@ -1,12 +1,15 @@
 #include "Application.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_oldnames.h>
+#include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_timer.h>
 #include <glad/glad.h>
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl3.h>
 
+#include <cmath>
 #include <filesystem>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
@@ -15,6 +18,30 @@
 #include "Logging.h"
 
 namespace Chip8 {
+
+static int current_sine_sample = 0;
+
+void AudioCallback(void* user_data, SDL_AudioStream* audio_stream, int additional_amount,
+                   int total_amount) {
+  additional_amount /= sizeof(float);
+  while (additional_amount > 0) {
+    float samples[128];
+    const int total = SDL_min(additional_amount, SDL_arraysize(samples));
+
+    for (int i = 0; i < total; ++i) {
+      const int freq = 440;
+      const float phase = current_sine_sample * freq / 8000.0f;
+      samples[i] = SDL_sinf(phase * 2 * SDL_PI_F);
+      current_sine_sample++;
+    }
+
+    current_sine_sample %= 8000;
+
+    SDL_PutAudioStreamData(audio_stream, samples, total * sizeof(float));
+
+    additional_amount -= total;
+  }
+}
 
 Application::Application(const char* rom_location) : m_RomLocation(rom_location) {}
 
@@ -78,6 +105,22 @@ bool Application::Initialize() {
 
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
   glDebugMessageCallback(Logger::OpenGLDebugMessageCallback, nullptr);
+
+  // Init Audio
+  SDL_AudioSpec spec;
+  spec.freq = 44100;
+  spec.format = SDL_AUDIO_S16;
+  spec.channels = 1;
+
+  m_AudioStream =
+      SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, AudioCallback, nullptr);
+
+  if (!m_AudioStream) {
+    LOG_ERROR("Failed to initialize audio stream: {}", SDL_GetError());
+    return false;
+  }
+
+  // SDL_ResumeAudioStreamDevice(m_AudioStream);
 
   // Init ImGui
   IMGUI_CHECKVERSION();

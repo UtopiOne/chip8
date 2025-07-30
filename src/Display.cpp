@@ -110,9 +110,6 @@ bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& 
                                 ? DISPLAY_HEIGHT
                                 : starting_pos.y + sprite.size())};
 
-  LOG_TRACE("Sprite location: {} {}", starting_pos.x, starting_pos.y);
-  LOG_TRACE("Sprite end: {} {}", end_pos.x, end_pos.y);
-
   for (auto x = starting_pos.x; x < end_pos.x; ++x) {
     for (auto y = starting_pos.y; y < end_pos.y; ++y) {
       PixelState value = GetNthBit(sprite[y - starting_pos.y], x - starting_pos.x);
