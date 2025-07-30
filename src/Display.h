@@ -24,14 +24,14 @@ public:
   Display();
 
   void UpdateDisplayData();
-  void RenderDisplay();
+  void RenderDisplay() const;
 
   void ClearDisplay();
 
   bool LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& sprite);
 
 private:
-  bool GetNthBit(Byte byte, int n);
+  inline bool GetNthBit(Byte byte, int n) const;
 
 private:
   std::array<std::array<PixelState, DISPLAY_HEIGHT>, DISPLAY_WIDTH> m_PixelData;

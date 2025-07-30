@@ -12,7 +12,7 @@ public:
 
   bool Load(const std::string &vertName, const std::string &fragName);
 
-  unsigned int GetShaderID() { return m_ShaderProgram; }
+  unsigned int GetShaderID() const { return m_ShaderProgram; }
 
   void SetActive();
 
@@ -25,8 +25,8 @@ private:
   unsigned int m_VertexShader, m_FragmentShader;
   unsigned int m_ShaderProgram;
 
-  bool IsShaderCompiled(GLuint shader);
+  bool IsShaderCompiled(GLuint shader) const;
   bool CompileShader(const std::string &file_name, GLenum shader_type, GLuint &out_shader);
 
-  bool IsValidProgram();
+  bool IsValidProgram() const;
 };

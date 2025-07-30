@@ -61,7 +61,7 @@ bool Shader::CompileShader(const std::string &file_name, GLenum shader_type, GLu
   return true;
 }
 
-bool Shader::IsShaderCompiled(GLuint shader) {
+bool Shader::IsShaderCompiled(GLuint shader) const {
   GLint status;
   // Query the compile status
   glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -77,7 +77,7 @@ bool Shader::IsShaderCompiled(GLuint shader) {
   return true;
 }
 
-bool Shader::IsValidProgram() {
+bool Shader::IsValidProgram() const {
   GLint status;
   // Query the link status
   glGetProgramiv(m_ShaderProgram, GL_LINK_STATUS, &status);

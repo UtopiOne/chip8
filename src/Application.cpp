@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_timer.h>
 #include <glad/glad.h>
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
@@ -104,6 +105,8 @@ bool Application::Initialize() {
 
   m_Display->UpdateDisplayData();
 
+  m_TicksCount = SDL_GetTicks();
+
   return true;
 }
 
@@ -144,15 +147,8 @@ void Application::ProcessInput() {
 }
 
 void Application::UpdateState() {
-  float delta_time = (SDL_GetTicks() - m_TicksCount) / 1000.0f;
-  m_TicksCount = SDL_GetTicks();
-
-  if (delta_time >= 0.05f) {
-    delta_time = 0.05f;
-  }
-
   if ((m_StepThrough && m_AdvanceNextStep) || !m_StepThrough) {
-    m_Interpreter->Run(delta_time);
+    m_Interpreter->Run();
     m_AdvanceNextStep = false;
   }
 }
@@ -162,26 +158,11 @@ void Application::RenderState() {
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
 
-  ImGui::Begin("Settings");
-
-  if (ImGui::Button("Restart")) {
-    m_Interpreter->Restart(m_RomLocation);
-  }
-
-  ImGui::ColorEdit3("BG color", (float*)&m_BgColor);
-
-  if (ImGui::CollapsingHeader("Debug")) {
-    ImGui::Checkbox("Step through", &m_StepThrough);
-    if (ImGui::Button("Next step")) {
-      m_AdvanceNextStep = true;
-    }
-    m_Interpreter->DisplayDebugMenu();
-  }
-  ImGui::End();
+  this->RenderDebugUI();
 
   ImGui::Render();
 
-  glClearColor(m_BgColor.x, m_BgColor.y, m_BgColor.z, 1.0);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
   glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
@@ -193,6 +174,26 @@ void Application::RenderState() {
 
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   SDL_GL_SwapWindow(m_Window);
+}
+
+void Application::RenderDebugUI() {
+  ImGui::Begin("Settings");
+
+  ImGui::Text("FPS: %f", 1000.0 / (SDL_GetTicks() - m_TicksCount));
+  m_TicksCount = SDL_GetTicks();
+
+  if (ImGui::Button("Restart")) {
+    m_Interpreter->Restart(m_RomLocation);
+  }
+
+  if (ImGui::CollapsingHeader("Debug")) {
+    ImGui::Checkbox("Step through", &m_StepThrough);
+    if (ImGui::Button("Next step")) {
+      m_AdvanceNextStep = true;
+    }
+    m_Interpreter->DisplayDebugMenu();
+  }
+  ImGui::End();
 }
 
 }  // namespace Chip8

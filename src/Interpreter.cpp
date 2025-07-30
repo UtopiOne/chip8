@@ -1,5 +1,6 @@
 #include "Interpreter.h"
 
+#include <SDL3/SDL_keyboard.h>
 #include <imgui.h>
 
 #include <cassert>
@@ -11,6 +12,7 @@
 #include <fstream>
 #include <ios>
 
+#include "Keycodes.h"
 #include "Logging.h"
 
 namespace Chip8 {
@@ -25,7 +27,7 @@ Interpreter::Interpreter(const char *rom_location)
   this->LoadROM(rom_location);
 }
 
-void Interpreter::Run(float delta_time) {
+void Interpreter::Run() {
   bool increment_program_counter = true;
 
   m_CurrentOpcode = (m_Memory[m_ProgramCounter] << 8) | (m_Memory[m_ProgramCounter + 1]);
@@ -33,6 +35,14 @@ void Interpreter::Run(float delta_time) {
   LOG_TRACE("{} Current Opcode: {:04X}", m_ProgramCounter, m_CurrentOpcode);
 
   auto first_nibble = GET_FIRST_NIBBLE(m_CurrentOpcode);
+
+  if (m_DelayTimer > 0) {
+    m_DelayTimer--;
+  }
+
+  if (m_SoundTimer > 0) {
+    m_SoundTimer--;
+  }
 
   switch (first_nibble) {
     case 0x0: {
@@ -321,15 +331,114 @@ void Interpreter::Run(float delta_time) {
       break;
     }
 
+    case 0xE: {
+      auto type = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
+
+      auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto key = m_Registers[register_name];
+
+      auto key_state = SDL_GetKeyboardState(nullptr);
+
+      switch (type) {
+        // EX9E: Skip if key in Vx is pressed
+        case 0x9E: {
+          if (key_state[(int)HexToKey(key)]) {
+            m_ProgramCounter += INSTRUCTION_SIZE;
+            LOG_TRACE("Key pressed {:X}, jump", key);
+          } else {
+            LOG_TRACE("Key not pressed {:X}", key);
+          }
+          break;
+        }
+        // EXA1: Skip if key in Vx is not pressed
+        case 0xA1: {
+          if (!key_state[(int)HexToKey(key)]) {
+            m_ProgramCounter += INSTRUCTION_SIZE;
+            LOG_TRACE("Key not pressed {:X}, jump", key);
+          } else {
+            LOG_TRACE("Key pressed {:X}", key);
+          }
+          break;
+        }
+        default: {
+          LOG_WARN("Unimplemented or incorrect opcode");
+          break;
+        }
+      }
+      break;
+    }
+
     case 0xF: {
       auto type = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
       auto register_name = GET_SECOND_NIBBLE(m_CurrentOpcode);
 
       switch (type) {
+        // FX07: Set Vx to value of delay timer
+        case 0x07: {
+          m_Registers[register_name] = m_DelayTimer;
+
+          LOG_TRACE("Set V{} to {}", register_name, m_DelayTimer);
+          break;
+        }
+
+        // FX15: Set the delay timer to Vx
+        case 0x15: {
+          m_DelayTimer = m_Registers[register_name];
+
+          LOG_TRACE("Set delay timer to V{}", register_name);
+          break;
+        }
+
+        // FX15: Set the delay timer to Vx
+        case 0x18: {
+          m_SoundTimer = m_Registers[register_name];
+
+          LOG_TRACE("Set sound timer to V{}", register_name);
+          break;
+        }
+
         // FX1E: I = I + Vx
         case 0x1E: {
           m_IndexRegister += m_Registers[register_name];
           LOG_TRACE("I += V{}", register_name);
+          break;
+        }
+
+        // FX29: Font character
+        case 0x29: {
+          m_IndexRegister = FONTSET_START + 5 * m_Registers[register_name];
+
+          LOG_TRACE("Index register set to location of character {}", m_Registers[register_name]);
+          break;
+        }
+
+        // FX55: Store registers V0 to Vx in memory
+        case 0x55: {
+          for (int i = 0; i <= register_name; ++i) {
+            m_Memory[m_IndexRegister + i] = m_Registers[i];
+          }
+
+          LOG_TRACE("Stored registers from V0 to V{:X} in memory starting at {}", register_name,
+                    m_IndexRegister);
+
+          break;
+        }
+
+        // FX65: Load registers V0 to Vx from memory
+        case 0x65: {
+          for (int i = 0; i <= register_name; ++i) {
+            m_Registers[i] = m_Memory[m_IndexRegister + i];
+          }
+
+          LOG_TRACE("Loaded registers from V0 to V{:X} from memory starting at {}", register_name,
+                    m_IndexRegister);
+
+          break;
+        }
+
+        default: {
+          LOG_WARN("Unimplemented or incorrect opcode");
+
           break;
         }
       }
@@ -351,6 +460,10 @@ void Interpreter::Run(float delta_time) {
 void Interpreter::Restart(const char *rom_location) {
   for (int i = 0; i < MEMORY_SIZE; ++i) {
     m_Memory[i] = 0;
+  }
+
+  for (int i = 0; i < REGISTER_SIZE; ++i) {
+    m_Registers[i] = 0;
   }
 
   this->LoadFont();
@@ -385,6 +498,9 @@ void Interpreter::DisplayDebugMenu() {
 
   ImGui::Text("Index Register: %d", m_IndexRegister);
   ImGui::Text("Program Counter: %d", m_ProgramCounter);
+
+  ImGui::Text("Delay timer: %d", m_DelayTimer);
+  ImGui::Text("Sound timer: %d", m_SoundTimer);
 }
 
 void Interpreter::LoadFont() {
@@ -403,8 +519,9 @@ void Interpreter::LoadROM(const char *rom_location) {
   LOG_INFO("ROM location: {}", rom_location);
   LOG_INFO("ROM size: {} bytes", rom_size);
 
-  if (rom_size > MEMORY_SIZE - ROM_START) {
+  if (rom_size > MEMORY_SIZE - ROM_START && input_file.is_open()) {
     LOG_ERROR("Failed to read ROM: too big");
+    exit(1);
   }
 
   char rom_buffer[rom_size];

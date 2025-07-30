@@ -60,7 +60,7 @@ public:
   Interpreter(const char *rom_location);
   void Restart(const char *rom_location);
 
-  void Run(float delta_time);
+  void Run();
   void DisplayDebugMenu();
 
   void SetDisplayPointer(std::shared_ptr<Display> &display_pointer) {

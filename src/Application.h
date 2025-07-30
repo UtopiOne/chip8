@@ -28,6 +28,8 @@ private:
   void UpdateState();
   void RenderState();
 
+  void RenderDebugUI();
+
 private:
   SDL_Window* m_Window = nullptr;
   SDL_GLContext m_GLContext;
@@ -37,10 +39,9 @@ private:
 
   std::unique_ptr<Shader> m_Shader;
 
-  ImVec4 m_BgColor;
   const char* m_RomLocation;
 
-  bool m_StepThrough = true;
+  bool m_StepThrough = false;
   bool m_AdvanceNextStep = false;
 
   bool m_IsRunning = true;

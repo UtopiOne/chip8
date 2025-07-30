@@ -38,6 +38,8 @@ add_executable(chip
 	src/Interpreter.cpp
 	src/Interpreter.h
 
+	src/Keycodes.h
+
 	src/Logging.cpp
 	src/Logging.h
 

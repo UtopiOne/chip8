@@ -32,8 +32,22 @@ Display::Display() {
 }
 
 void Display::UpdateDisplayData() {
+  int pixel_count = 0;
+  for (int x = 0; x < DISPLAY_WIDTH; ++x) {
+    for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
+      if (m_PixelData[x][y]) {
+        pixel_count++;
+      }
+    }
+  }
+
+  LOG_TRACE("Pixel Count: {}", pixel_count);
+
   std::vector<Vector2<double>> positions;
   std::vector<unsigned int> elements;
+
+  positions.reserve(pixel_count * 4);
+  elements.reserve(pixel_count * 6);
 
   uint16_t cnt = 0;
   for (int x = 0; x < DISPLAY_WIDTH; ++x) {
@@ -71,7 +85,7 @@ void Display::UpdateDisplayData() {
                GL_STATIC_DRAW);
 }
 
-void Display::RenderDisplay() {
+void Display::RenderDisplay() const {
   glBindVertexArray(m_VAO);
   glDrawElements(GL_TRIANGLES, m_Size, GL_UNSIGNED_INT, 0);
 }
@@ -116,7 +130,7 @@ bool Display::LoadSprite(const PixelPos x, const PixelPos y, std::vector<Byte>& 
   return flag;
 }
 
-bool Display::GetNthBit(Byte byte, int n) {
+bool Display::GetNthBit(Byte byte, int n) const {
   Byte mask = 128 >> n;
 
   if (byte & mask) {
