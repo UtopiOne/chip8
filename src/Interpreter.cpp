@@ -381,6 +381,32 @@ void Interpreter::Run() {
           break;
         }
 
+        // FX0A: Block until key is pressed
+        case 0x0A: {
+          auto key_state = SDL_GetKeyboardState(nullptr);
+
+          LOG_TRACE("Awaiting key press...");
+
+          bool key_pressed = false;
+          int key;
+          for (int i = 0; i < 0xF; ++i) {
+            if (key_state[(int)HexToKey(i)]) {
+              key_pressed = true;
+              key = i;
+
+              LOG_TRACE("Key pressed");
+            }
+          }
+
+          if (!key_pressed) {
+            m_ProgramCounter -= INSTRUCTION_SIZE;
+          } else {
+            m_Registers[register_name] = key;
+          }
+
+          break;
+        }
+
         // FX15: Set the delay timer to Vx
         case 0x15: {
           m_DelayTimer = m_Registers[register_name];
@@ -409,6 +435,23 @@ void Interpreter::Run() {
           m_IndexRegister = FONTSET_START + 5 * m_Registers[register_name];
 
           LOG_TRACE("Index register set to location of character {}", m_Registers[register_name]);
+          break;
+        }
+
+        // FX33: Binary-coded decimal conversion
+        case 0x33: {
+          auto number = m_Registers[register_name];
+
+          auto digit1 = number / 100;
+          auto digit2 = (number / 10) % 10;
+          auto digit3 = number % 10;
+
+          m_Memory[m_IndexRegister] = digit1;
+          m_Memory[m_IndexRegister + 1] = digit2;
+          m_Memory[m_IndexRegister + 2] = digit3;
+
+          LOG_TRACE("Converted number {} into {} {} {}", number, digit1, digit2, digit3);
+
           break;
         }
 
