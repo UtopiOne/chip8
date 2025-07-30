@@ -15,35 +15,13 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 
+#include "Audio.h"
 #include "Logging.h"
 
 namespace Chip8 {
 
-static int current_sine_sample = 0;
-
-void AudioCallback(void* user_data, SDL_AudioStream* audio_stream, int additional_amount,
-                   int total_amount) {
-  additional_amount /= sizeof(float);
-  while (additional_amount > 0) {
-    float samples[128];
-    const int total = SDL_min(additional_amount, SDL_arraysize(samples));
-
-    for (int i = 0; i < total; ++i) {
-      const int freq = 440;
-      const float phase = current_sine_sample * freq / 8000.0f;
-      samples[i] = SDL_sinf(phase * 2 * SDL_PI_F);
-      current_sine_sample++;
-    }
-
-    current_sine_sample %= 8000;
-
-    SDL_PutAudioStreamData(audio_stream, samples, total * sizeof(float));
-
-    additional_amount -= total;
-  }
-}
-
-Application::Application(const char* rom_location) : m_RomLocation(rom_location) {}
+Application::Application(const char* rom_location)
+    : m_RomLocation(rom_location), m_Interpreter(rom_location) {}
 
 Application::~Application() {}
 
@@ -107,20 +85,10 @@ bool Application::Initialize() {
   glDebugMessageCallback(Logger::OpenGLDebugMessageCallback, nullptr);
 
   // Init Audio
-  SDL_AudioSpec spec;
-  spec.freq = 44100;
-  spec.format = SDL_AUDIO_S16;
-  spec.channels = 1;
+  m_AudioHandler = std::make_shared<AudioHandler>();
 
-  m_AudioStream =
-      SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, AudioCallback, nullptr);
-
-  if (!m_AudioStream) {
-    LOG_ERROR("Failed to initialize audio stream: {}", SDL_GetError());
-    return false;
-  }
-
-  // SDL_ResumeAudioStreamDevice(m_AudioStream);
+  SDL_ResumeAudioStreamDevice(m_AudioHandler->GetStream());
+  m_AudioHandler->PauseStream();
 
   // Init ImGui
   IMGUI_CHECKVERSION();
@@ -142,9 +110,9 @@ bool Application::Initialize() {
   m_Shader->Load("src/Shaders/display.vert", "src/Shaders/display.frag");
 
   // Init everything else
-  m_Interpreter = std::make_unique<Interpreter>(m_RomLocation);
   m_Display = std::make_shared<Display>();
-  m_Interpreter->SetDisplayPointer(m_Display);
+  m_Interpreter.SetDisplayPointer(m_Display);
+  m_Interpreter.SetAudioPointer(m_AudioHandler);
 
   m_Display->UpdateDisplayData();
 
@@ -191,7 +159,7 @@ void Application::ProcessInput() {
 
 void Application::UpdateState() {
   if ((m_StepThrough && m_AdvanceNextStep) || !m_StepThrough) {
-    m_Interpreter->Run();
+    m_Interpreter.Run();
     m_AdvanceNextStep = false;
   }
 }
@@ -226,7 +194,7 @@ void Application::RenderDebugUI() {
   m_TicksCount = SDL_GetTicks();
 
   if (ImGui::Button("Restart")) {
-    m_Interpreter->Restart(m_RomLocation);
+    m_Interpreter.Restart(m_RomLocation);
   }
 
   if (ImGui::CollapsingHeader("Debug")) {
@@ -234,7 +202,7 @@ void Application::RenderDebugUI() {
     if (ImGui::Button("Next step")) {
       m_AdvanceNextStep = true;
     }
-    m_Interpreter->DisplayDebugMenu();
+    m_Interpreter.DisplayDebugMenu();
   }
   ImGui::End();
 }

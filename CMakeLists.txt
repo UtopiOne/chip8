@@ -35,6 +35,9 @@ add_executable(chip
 	src/Application.cpp
 	src/Application.h
 
+	src/Audio.cpp
+	src/Audio.h
+
 	src/Display.cpp
 	src/Display.h
 

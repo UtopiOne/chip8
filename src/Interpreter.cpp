@@ -36,9 +36,34 @@ void Interpreter::Run() {
 
   if (m_SoundTimer > 0) {
     m_SoundTimer--;
+    if (m_AudioPoinater->IsStreamPaused()) m_AudioPoinater->UnpauseStream();
+  } else {
+    if (!m_AudioPoinater->IsStreamPaused()) m_AudioPoinater->PauseStream();
   }
 
   switch (first_nibble) {
+    // DXYN: Display N-pixel tall sprite from the index register to the XY
+    // location from { VX, VY } registers
+    case 0xD: {
+      auto x = GET_SECOND_NIBBLE(m_CurrentOpcode);
+      auto y = GET_THIRD_NIBBLE(m_CurrentOpcode);
+      size_t n = GET_FOURTH_NIBBLE(m_CurrentOpcode);
+
+      std::vector<Byte> sprite(n);
+
+      for (int i = m_IndexRegister; i < m_IndexRegister + n; ++i) {
+        sprite[i - m_IndexRegister] = m_Memory[i];
+      }
+
+      auto flag = m_DisplayPointer->LoadSprite(m_Registers[x], m_Registers[y], sprite);
+      m_DisplayPointer->UpdateDisplayData();
+
+      m_Registers[FLAG_REGISTER] = (Byte)flag;
+
+      LOG_TRACE("Draw sprite with height {:X} at {} {}", n, m_Registers[x], m_Registers[y]);
+      break;
+    }
+
     case 0x0: {
       // 00E0: Clear Screen
       if (m_CurrentOpcode == 0x00E0) {
@@ -302,29 +327,6 @@ void Interpreter::Run() {
 
       break;
     }
-
-    // DXYN: Display N-pixel tall sprite from the index register to the XY
-    // location from { VX, VY } registers
-    case 0xD: {
-      auto x = GET_SECOND_NIBBLE(m_CurrentOpcode);
-      auto y = GET_THIRD_NIBBLE(m_CurrentOpcode);
-      size_t n = GET_FOURTH_NIBBLE(m_CurrentOpcode);
-
-      std::vector<Byte> sprite(n);
-
-      for (int i = m_IndexRegister; i < m_IndexRegister + n; ++i) {
-        sprite[i - m_IndexRegister] = m_Memory[i];
-      }
-
-      auto flag = m_DisplayPointer->LoadSprite(m_Registers[x], m_Registers[y], sprite);
-      m_DisplayPointer->UpdateDisplayData();
-
-      m_Registers[FLAG_REGISTER] = (Byte)flag;
-
-      LOG_TRACE("Draw sprite with height {:X} at {} {}", n, m_Registers[x], m_Registers[y]);
-      break;
-    }
-
     case 0xE: {
       auto type = GET_LAST_TWO_NIBBLES(m_CurrentOpcode);
 

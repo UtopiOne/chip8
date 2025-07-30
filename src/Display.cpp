@@ -32,22 +32,8 @@ Display::Display() {
 }
 
 void Display::UpdateDisplayData() {
-  int pixel_count = 0;
-  for (int x = 0; x < DISPLAY_WIDTH; ++x) {
-    for (int y = 0; y < DISPLAY_HEIGHT; ++y) {
-      if (m_PixelData[x][y]) {
-        pixel_count++;
-      }
-    }
-  }
-
-  LOG_TRACE("Pixel Count: {}", pixel_count);
-
   std::vector<Vector2<double>> positions;
   std::vector<unsigned int> elements;
-
-  positions.reserve(pixel_count * 4);
-  elements.reserve(pixel_count * 6);
 
   uint16_t cnt = 0;
   for (int x = 0; x < DISPLAY_WIDTH; ++x) {

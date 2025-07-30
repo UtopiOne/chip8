@@ -5,6 +5,7 @@
 #include <memory>
 #include <stack>
 
+#include "Audio.h"
 #include "Display.h"
 
 using MemoryAddress = uint16_t;
@@ -66,6 +67,9 @@ public:
   void SetDisplayPointer(std::shared_ptr<Display> &display_pointer) {
     m_DisplayPointer = display_pointer;
   }
+  void SetAudioPointer(std::shared_ptr<AudioHandler> &audio_pointer) {
+    m_AudioPoinater = audio_pointer;
+  }
 
 private:
   void LoadROM(const char *rom_location);
@@ -73,6 +77,7 @@ private:
 
 private:
   std::shared_ptr<Display> m_DisplayPointer;
+  std::shared_ptr<AudioHandler> m_AudioPoinater;
 
   std::array<Byte, MEMORY_SIZE> m_Memory{0};
   std::array<Byte, REGISTER_SIZE> m_Registers{0};
