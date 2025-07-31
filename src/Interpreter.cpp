@@ -1,8 +1,8 @@
 #include "Interpreter.h"
 
-#include <SDL3/SDL_keyboard.h>
-#include <SDL3/SDL_timer.h>
+#include <SDL3/SDL.h>
 #include <imgui.h>
+#include <imgui_memory_editor.h>
 
 #include <cassert>
 #include <cstddef>
@@ -530,6 +530,15 @@ void Interpreter::DisplayDebugMenu() {
       }
     }
     ImGui::EndTable();
+  }
+
+  static MemoryEditor memory_editor;
+  memory_editor.OptShowAscii = false;
+  memory_editor.ReadOnly = true;
+  memory_editor.DrawWindow("Memory", m_Memory.data(), MEMORY_SIZE);
+
+  if (ImGui::Button("Go to program counter")) {
+    memory_editor.GotoAddrAndHighlight(m_ProgramCounter, m_ProgramCounter);
   }
 
   ImGui::Text("Index Register: %d", m_IndexRegister);

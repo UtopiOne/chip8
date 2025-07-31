@@ -57,6 +57,7 @@ add_executable(chip
 	vendor/imgui/imgui_impl_opengl3.cpp
 	vendor/imgui/imgui_impl_opengl3.h
 	vendor/imgui/imgui_impl_opengl3_loader.h
+	vendor/imgui/imgui_memory_editor.h
 )
 
 target_include_directories(chip PUBLIC vendor/imgui)

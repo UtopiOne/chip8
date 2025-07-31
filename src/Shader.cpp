@@ -1,6 +1,6 @@
 #include "Shader.h"
 
-#include <SDL3/SDL_log.h>
+#include <SDL3/SDL.h>
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>

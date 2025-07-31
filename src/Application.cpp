@@ -1,21 +1,15 @@
 #include "Application.h"
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_oldnames.h>
-#include <SDL3/SDL_stdinc.h>
-#include <SDL3/SDL_timer.h>
-#include <SDL3/SDL_video.h>
 #include <glad/glad.h>
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl3.h>
 
-#include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
-#include <iostream>
 #include <memory>
 
 #include "Audio.h"

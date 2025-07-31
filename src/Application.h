@@ -3,7 +3,6 @@
 #include <SDL3/SDL.h>
 #include <imgui.h>
 
-#include <chrono>
 #include <memory>
 
 #include "Audio.h"
@@ -13,8 +12,8 @@
 
 namespace Chip8 {
 
-constexpr uint16_t WINDOW_WIDTH = 1280;
-constexpr uint16_t WINDOW_HEIGHT = 720;
+constexpr uint16_t WINDOW_WIDTH = 1920;
+constexpr uint16_t WINDOW_HEIGHT = 1080;
 
 class Application {
 public:
