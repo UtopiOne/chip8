@@ -16,8 +16,6 @@ namespace Chip8 {
 constexpr uint16_t WINDOW_WIDTH = 1280;
 constexpr uint16_t WINDOW_HEIGHT = 720;
 
-constexpr unsigned int OPS_PER_SECONDS = 500;
-
 class Application {
 public:
   Application(const char* rom_location);
@@ -53,5 +51,7 @@ private:
 
   unsigned int m_TicksCount = 0;
   unsigned int m_TicksElapsed = 0;
+
+  int m_OpsPerSecond = 700;
 };
 }  // namespace Chip8

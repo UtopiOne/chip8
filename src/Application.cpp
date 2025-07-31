@@ -166,7 +166,7 @@ void Application::ProcessInput() {
 }
 
 void Application::UpdateState() {
-  const int time_cap = 1000 / OPS_PER_SECONDS;
+  const int time_cap = 1000 / m_OpsPerSecond;
 
   if (m_TicksElapsed > time_cap) {
     if (((m_StepThrough && m_AdvanceNextStep) || !m_StepThrough)) {
@@ -207,6 +207,8 @@ void Application::RenderDebugUI() {
   if (ImGui::Button("Restart")) {
     m_Interpreter.Restart(m_RomLocation);
   }
+
+  ImGui::SliderInt("Speed (op/s)", &m_OpsPerSecond, 1, 1000);
 
   if (ImGui::CollapsingHeader("Debug")) {
     ImGui::Checkbox("Step through", &m_StepThrough);

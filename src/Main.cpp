@@ -1,9 +1,12 @@
 #include <cstdlib>
+#include <ctime>
 
 #include "Application.h"
 #include "Logging.h"
 
 int main(int argc, char *argv[]) {
+  srand(time(nullptr));
+
   if (argc == 1) {
     return EXIT_FAILURE;
   }
