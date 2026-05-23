@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_stdinc.h>
 #include <glad/glad.h>
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
@@ -26,6 +27,7 @@ Application::~Application() {}
 
 bool Application::Initialize() {
   // Init SDL
+
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
     LOG_ERROR("Failed to initialize SDL: {}", SDL_GetError());
 
@@ -37,16 +39,7 @@ bool Application::Initialize() {
   const auto window_flags = SDL_WINDOW_OPENGL;
   const auto window_title =
       std::string("CHIP8: ") + std::filesystem::path(m_RomLocation).filename().string();
-  m_Window = SDL_CreateWindow(window_title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
-  if (m_Window == nullptr) {
-    LOG_ERROR("SDL_CreateWindow Error: {}", SDL_GetError());
 
-    return false;
-  }
-  LOG_INFO("Window initialized successfully.");
-
-  // Init OpenGL context
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -57,6 +50,16 @@ bool Application::Initialize() {
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+
+  m_Window = SDL_CreateWindow(window_title.c_str(), WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
+  if (m_Window == nullptr) {
+    LOG_ERROR("SDL_CreateWindow Error: {}", SDL_GetError());
+
+    return false;
+  }
+  LOG_INFO("Window initialized successfully.");
+
+  // Init OpenGL context
 
   m_GLContext = SDL_GL_CreateContext(m_Window);
   if (m_GLContext == nullptr) {

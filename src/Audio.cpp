@@ -17,7 +17,7 @@ AudioHandler::AudioHandler() {
 
   if (!m_AudioStream) {
     LOG_ERROR("Failed to initialize audio stream: {}", SDL_GetError());
-    exit(1);
+    // exit(1);
   }
 }
 
